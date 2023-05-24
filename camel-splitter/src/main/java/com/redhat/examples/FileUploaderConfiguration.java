@@ -20,17 +20,17 @@ import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.rest.RestBindingMode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.jboss.logging.Logger;
 
-@Component
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
 public class FileUploaderConfiguration extends RouteBuilder {
 
-  private static final Logger log = LoggerFactory.getLogger(CamelConfiguration.class);
+  private static final Logger log = Logger.getLogger(CamelConfiguration.class);
   
-  @Autowired
+  @Inject
   private SplitterProperties props;
   
   @Override
@@ -45,11 +45,11 @@ public class FileUploaderConfiguration extends RouteBuilder {
     ;
     
     from("direct:fileUpload")
-      .log(LoggingLevel.INFO, log, "Uploading file...")
+      .log(LoggingLevel.INFO, "Uploading file...")
       .unmarshal().mimeMultipart()
       .convertBodyTo(byte[].class)
       .setHeader(Exchange.FILE_NAME, simple("upload-${exchangeId}.xml"))
-      .toF("file:%s", props.getDir())
+      .toF("file:%s", props.dir())
       .setHeader(Exchange.CONTENT_TYPE, constant("text/plain"))
       .setBody(header(Exchange.FILE_NAME))
     ;

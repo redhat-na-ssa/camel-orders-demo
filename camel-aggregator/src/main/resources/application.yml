@@ -21,12 +21,6 @@ camel:
   springboot:
     name: camel-aggregator
 
-# Logging
-logging:
-  config: classpath:logback.xml
-  level:
-    com.redhat.examples: INFO
-    
 # Application
 aggregator:
   dir: target/output/

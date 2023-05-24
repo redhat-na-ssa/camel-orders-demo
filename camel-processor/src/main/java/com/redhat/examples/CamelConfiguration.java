@@ -17,23 +17,24 @@
 package com.redhat.examples;
 
 import com.redhat.examples.json.ProcessedOrder;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
-import org.apache.camel.processor.aggregate.AggregationStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
+import org.apache.camel.AggregationStrategy;
+import org.jboss.logging.Logger;
 
-@Component
+@ApplicationScoped
 public class CamelConfiguration extends RouteBuilder {
 
-  private static final Logger log = LoggerFactory.getLogger(CamelConfiguration.class);
+  private static final Logger log = Logger.getLogger(CamelConfiguration.class);
   
-  @Bean
+  @Produces
   private AggregationStrategy descriptionEnrichmentStrategy() {
     return (Exchange original, Exchange resource) -> {
       if (resource.getIn().getBody() != null) {
@@ -46,15 +47,15 @@ public class CamelConfiguration extends RouteBuilder {
   @Override
   public void configure() throws Exception {
     from("amqp:queue:raw?connectionFactory=#pooledJmsConnectionFactory&acknowledgementModeName=CLIENT_ACKNOWLEDGE")
-      .log(LoggingLevel.INFO, log, "Picked up raw order: [${body}]")
+      .log(LoggingLevel.INFO, "Picked up raw order: [${body}]")
       .unmarshal().jaxb("com.redhat.examples.xml")
       .to("dozer:rawToProcessed?sourceModel=com.redhat.examples.xml.RawOrder&targetModel=com.redhat.examples.json.ProcessedOrder")
       .enrich()
         .constant("direct:fetchDescription")
-        .aggregationStrategyRef("descriptionEnrichmentStrategy")
+        .aggregationStrategy("descriptionEnrichmentStrategy")
       .end()
       .marshal().json(JsonLibrary.Jackson, false)
-      .log(LoggingLevel.INFO, log, "Sending processed order: [${body}]")
+      .log(LoggingLevel.INFO, "Sending processed order: [${body}]")
       .to(ExchangePattern.InOnly, "amqp:queue:processed?connectionFactory=#pooledJmsConnectionFactory")
     ;
     

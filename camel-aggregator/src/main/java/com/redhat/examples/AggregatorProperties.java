@@ -16,20 +16,11 @@
  */
 package com.redhat.examples;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import io.smallrye.config.ConfigMapping;
 
-@Component
-@ConfigurationProperties(prefix = "aggregator")
-public class AggregatorProperties {
+@ConfigMapping(prefix = "aggregator")
+public interface AggregatorProperties {
 
-  private String dir;
+  String dir();
 
-  public String getDir() {
-    return dir;
-  }
-
-  public void setDir(String dir) {
-    this.dir = dir;
-  }
 }

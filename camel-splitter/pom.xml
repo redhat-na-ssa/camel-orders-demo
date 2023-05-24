@@ -15,92 +15,13 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-actuator</artifactId>
+      <groupId>org.apache.camel.quarkus</groupId>
+      <artifactId>camel-quarkus-mail</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-spring-boot-starter</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-servlet-starter</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-mail-starter</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-amqp-starter</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.amqphub.spring</groupId>
-      <artifactId>amqp-10-jms-spring-boot-starter</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.messaginghub</groupId>
-      <artifactId>pooled-jms</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
+      <groupId>org.apache.camel.quarkus</groupId>
+      <artifactId>camel-quarkus-amqp</artifactId>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.jboss.redhat-fuse</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-
-  <profiles>
-    <profile>
-      <id>standalone</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <dependencies>
-        <dependency>
-          <groupId>io.hawt</groupId>
-          <artifactId>hawtio-springboot</artifactId>
-        </dependency>
-      </dependencies>
-    </profile>
-    <profile>
-      <id>openshift</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>io.fabric8</groupId>
-            <artifactId>fabric8-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>fabric8</id>
-                <goals>
-                  <goal>resource</goal>
-                  <goal>build</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 
 </project>

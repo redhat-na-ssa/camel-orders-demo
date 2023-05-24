@@ -26,17 +26,17 @@ import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.rest.RestBindingMode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.jboss.logging.Logger;
 
-@Component
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
 public class FileServerConfiguration extends RouteBuilder {
 
-  private static final Logger log = LoggerFactory.getLogger(CamelConfiguration.class);
+  private static final Logger log = Logger.getLogger(FileServerConfiguration.class);
   
-  @Autowired
+  @Inject
   private AggregatorProperties props;
   
   @Override
@@ -54,20 +54,26 @@ public class FileServerConfiguration extends RouteBuilder {
     ;
     
     from("direct:listFiles")
-      .log(LoggingLevel.INFO, log, String.format("Listing files in [%s]", props.getDir()))
+      .log(LoggingLevel.INFO, String.format("Listing files in [%s]", props.dir()))
       .process((Exchange exchange) -> { 
-        if (Files.exists(Paths.get(props.getDir()))) {
-          Stream<Path> walk = Files.walk(Paths.get(props.getDir()));
-          List<String> files = walk.filter(Files::isRegularFile).map(x -> x.getFileName().toString()).collect(Collectors.toList());
-          exchange.getIn().setBody(String.join("\n", files)); 
+        if (Files.exists(Paths.get(props.dir()))) {
+          Stream<Path> walk = null;
+          try {
+            walk = Files.walk(Paths.get(props.dir()));
+            List<String> files = walk.filter(Files::isRegularFile).map(x -> x.getFileName().toString()).collect(Collectors.toList());
+            exchange.getIn().setBody(String.join("\n", files));
+          }finally{
+            if(walk != null)
+              walk.close();
+          } 
         }
       })
       .setHeader(Exchange.CONTENT_TYPE, constant("text/plain"))
     ;
     
     from("direct:getFile")
-      .log(LoggingLevel.INFO, log, "Getting file [${header.filename}]")
-      .routingSlip(simpleF("language:constant:file:%s${headers.filename}?contentCache=false", props.getDir()))
+      .log(LoggingLevel.INFO, "Getting file [${header.filename}]")
+      .routingSlip(simpleF("language:constant:file:%s${headers.filename}?contentCache=false", props.dir()))
       .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
     ;
   }

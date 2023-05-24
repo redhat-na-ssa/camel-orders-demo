@@ -1,0 +1,47 @@
+version: '3.7'
+
+# NETWORKING README
+#   This docker compose assumes a networking architecture where:
+#     1)  containers are not in the same pod
+#     2)  containers bind to the host and use the "port mapping" technique for deconfliction.
+#   The above assumptions occurs by default when running this docker-compose in rootless podman4 via the default slirp4netns network setup:
+#     https://github.com/containers/podman/blob/main/docs/tutorials/basic_networking.md#slirp4netns
+#
+#   As such, the containers created as per this compose file are configured to all bind to different ports on the host.
+#   You need to ensure your host is not already running processes that bind to ports specified in this docker-compose file.
+#   Also, this docker-compose file assumes that the host (and subsequently all containers bound to it) is resolvable by the name:  rht.
+#   To accomplish this, it is recommended that you add an entry with the name "rht" to your /etc/hosts.  ie:
+#       192.168.122.1     rht
+
+services:
+
+  mysql:
+    container_name: mysql
+    image: registry.redhat.io/rhel8/mysql-80:1-258
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: mysql
+      MYSQL_DATABASE: example
+      MYSQL_ROOT_PASSWORD: Abcd1234
+    networks:
+      - rht-ml
+
+  artemis:
+    container_name: artemis
+    image: quay.io/artemiscloud/activemq-artemis-broker-init:artemis.2.28.0
+    ports:
+      - "61616:61616"
+      - "1883:1883"
+      - "5672:5672"
+    environment:
+      AMQ_USER: admin
+      AMQ_PASSWORD: admin
+    networks:
+      - rht-ml
+
+networks:
+  rht-ml:
+    name: rht-ml
+    driver: bridge

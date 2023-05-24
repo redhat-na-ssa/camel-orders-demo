@@ -16,20 +16,10 @@
  */
 package com.redhat.examples;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import io.smallrye.config.ConfigMapping;
 
-@Component
-@ConfigurationProperties(prefix = "splitter")
-public class SplitterProperties {
+@ConfigMapping(prefix = "splitter")
+public interface SplitterProperties {
 
-  private String dir;
-
-  public String getDir() {
-    return dir;
-  }
-
-  public void setDir(String dir) {
-    this.dir = dir;
-  }
+  String dir();
 }
