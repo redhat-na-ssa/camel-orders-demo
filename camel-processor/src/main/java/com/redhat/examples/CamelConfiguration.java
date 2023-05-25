@@ -17,8 +17,10 @@
 package com.redhat.examples;
 
 import com.redhat.examples.json.ProcessedOrder;
+import com.redhat.examples.xml.RawOrder;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
@@ -32,6 +34,11 @@ import org.jboss.logging.Logger;
 public class CamelConfiguration extends RouteBuilder {
 
   private static final Logger log = Logger.getLogger(CamelConfiguration.class);
+
+  @Inject
+  OrderMapping orderMapping;
+
+
   
   private AggregationStrategy descriptionEnrichmentStrategy() {
     return (Exchange original, Exchange resource) -> {
@@ -47,6 +54,10 @@ public class CamelConfiguration extends RouteBuilder {
     from("amqp:queue:raw?acknowledgementModeName=CLIENT_ACKNOWLEDGE")
       .log(LoggingLevel.INFO, "Picked up raw order: [${body}]")
       .unmarshal().jaxb("com.redhat.examples.xml")
+      .process(e -> {
+        RawOrder raw = (RawOrder)e.getIn().getBody();
+        e.getIn().setBody(orderMapping.rawToProcessed(raw));
+      })
       //.to("dozer:rawToProcessed?sourceModel=com.redhat.examples.xml.RawOrder&targetModel=com.redhat.examples.json.ProcessedOrder")
       .enrich()
         .constant("direct:fetchDescription")

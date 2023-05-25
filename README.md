@@ -54,7 +54,7 @@ _Note: If running on OpenShift, replace the URLs below with the OpenShift route.
 To upload order data you can use `curl` (as seen below), or you can use the upload form at 'http://localhost:8080/upload.html'.
 
 ```
-curl -X POST -F '@file=@./src/test/data/order-01.xml' 'http://localhost:8080/camel/files/'
+curl -X POST -F '@file=@./camel-splitter/src/test/data/orders-01.xml' 'http://localhost:8080/camel/files/'
 ```
 
 To list the processed files you can use `curl` (as seen below), or you can use the files page at 'http://localhost:9090/files.html':

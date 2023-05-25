@@ -17,14 +17,17 @@ services:
 
   mysql:
     container_name: mysql
-    image: registry.redhat.io/rhel8/mysql-80:1-258
+    #image: registry.redhat.io/rhel8/mysql-80:1-258
+    image: docker.io/mysql:8.0.33
     ports:
       - "3306:3306"
     environment:
       MYSQL_USER: mysql
       MYSQL_PASSWORD: mysql
-      MYSQL_DATABASE: example
+      MYSQL_DATABASE: sampledb
       MYSQL_ROOT_PASSWORD: Abcd1234
+    volumes:
+    - ./mysql:/docker-entrypoint-initdb.d:bind
     networks:
       - rht-ml
 
@@ -35,6 +38,7 @@ services:
       - "61616:61616"
       - "1883:1883"
       - "5672:5672"
+      - "8161:8161"
     environment:
       AMQ_USER: admin
       AMQ_PASSWORD: admin
