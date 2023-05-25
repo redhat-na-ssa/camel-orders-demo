@@ -19,7 +19,6 @@ package com.redhat.examples;
 import com.redhat.examples.json.ProcessedOrder;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Produces;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
@@ -34,7 +33,6 @@ public class CamelConfiguration extends RouteBuilder {
 
   private static final Logger log = Logger.getLogger(CamelConfiguration.class);
   
-  @Produces
   private AggregationStrategy descriptionEnrichmentStrategy() {
     return (Exchange original, Exchange resource) -> {
       if (resource.getIn().getBody() != null) {
@@ -46,21 +44,21 @@ public class CamelConfiguration extends RouteBuilder {
   
   @Override
   public void configure() throws Exception {
-    from("amqp:queue:raw?connectionFactory=#pooledJmsConnectionFactory&acknowledgementModeName=CLIENT_ACKNOWLEDGE")
+    from("amqp:queue:raw?acknowledgementModeName=CLIENT_ACKNOWLEDGE")
       .log(LoggingLevel.INFO, "Picked up raw order: [${body}]")
       .unmarshal().jaxb("com.redhat.examples.xml")
-      .to("dozer:rawToProcessed?sourceModel=com.redhat.examples.xml.RawOrder&targetModel=com.redhat.examples.json.ProcessedOrder")
+      //.to("dozer:rawToProcessed?sourceModel=com.redhat.examples.xml.RawOrder&targetModel=com.redhat.examples.json.ProcessedOrder")
       .enrich()
         .constant("direct:fetchDescription")
-        .aggregationStrategy("descriptionEnrichmentStrategy")
+        .aggregationStrategy(descriptionEnrichmentStrategy())
       .end()
       .marshal().json(JsonLibrary.Jackson, false)
       .log(LoggingLevel.INFO, "Sending processed order: [${body}]")
-      .to(ExchangePattern.InOnly, "amqp:queue:processed?connectionFactory=#pooledJmsConnectionFactory")
+      .to(ExchangePattern.InOnly, "amqp:queue:processed")
     ;
     
     from("direct:fetchDescription")
-      .to("sql:select description from ITEM_DESCRIPTION where id=:#${body.item}?dataSource=#dataSource&outputType=SelectOne")
+      .to("sql:select description from ITEM_DESCRIPTION where id=:#${body.item}?dataSource=#camel-ds&outputType=SelectOne")
     ;
   }
 }

@@ -28,7 +28,7 @@ import jakarta.inject.Inject;
 @ApplicationScoped
 public class FileUploaderConfiguration extends RouteBuilder {
 
-  private static final Logger log = Logger.getLogger(CamelConfiguration.class);
+  private static final Logger log = Logger.getLogger(FileUploaderConfiguration.class);
   
   @Inject
   private SplitterProperties props;

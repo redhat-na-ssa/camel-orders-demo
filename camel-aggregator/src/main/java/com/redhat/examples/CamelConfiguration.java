@@ -28,8 +28,8 @@ import org.apache.camel.builder.AggregationStrategies;
 import org.jboss.logging.Logger;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
+import jakarta.jms.ConnectionFactory;
 
 @ApplicationScoped
 public class CamelConfiguration extends RouteBuilder {
@@ -37,9 +37,9 @@ public class CamelConfiguration extends RouteBuilder {
   private static final Logger log = Logger.getLogger(CamelConfiguration.class);
   
   @Inject
-  private AggregatorProperties props;
+  AggregatorProperties props;
+
   
-  @Produces
   private AggregationStrategy orderAggregationStrategy() {
     return AggregationStrategies
             .flexible()
@@ -52,16 +52,16 @@ public class CamelConfiguration extends RouteBuilder {
   @Override
   public void configure() throws Exception {
     
-    from("amqp:queue:processed?connectionFactory=#pooledJmsConnectionFactory&acknowledgementModeName=CLIENT_ACKNOWLEDGE")
+    from("amqp:queue:processed?acknowledgementModeName=CLIENT_ACKNOWLEDGE")
       .log(LoggingLevel.INFO, "Picked up processed order: [${body}]")
       .unmarshal().json(JsonLibrary.Jackson, Map.class)
       .aggregate()
         .simple("${body[customer]}")
-        .aggregationStrategy("orderAggregationStrategy")
+        .aggregationStrategy(this.orderAggregationStrategy())
         .completionTimeout(5000L)
         .completionSize(10)
           .log(LoggingLevel.INFO, "Completing aggregate order: [${exchangeProperty.CamelAggregatedCorrelationKey}]")
-          .transform().groovy("['orders':request.body]")
+          //.transform().groovy("['orders':request.body]")
           .marshal().json(JsonLibrary.Jackson, true)
           .setHeader("CurrentTimeMillis", method(System.class, "currentTimeMillis"))
           .to(ExchangePattern.InOnly, String.format("file:%s?fileName=order-${exchangeProperty.CamelAggregatedCorrelationKey}-${header.CurrentTimeMillis}.json", props.dir()))

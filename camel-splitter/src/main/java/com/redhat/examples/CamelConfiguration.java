@@ -39,7 +39,7 @@ public class CamelConfiguration extends RouteBuilder {
       .log(LoggingLevel.INFO, "Picked up orders file: [${headers.CamelFileName}]")
       .split(xpath("/orders/order"))
         .log(LoggingLevel.INFO, "Sending order: [${body}]")
-        .to(ExchangePattern.InOnly, "amqp:queue:raw?connectionFactory=#pooledJmsConnectionFactory")
+        .to(ExchangePattern.InOnly, "amqp:queue:raw")
       .end()
     ;
   }
