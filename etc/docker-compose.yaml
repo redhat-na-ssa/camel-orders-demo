@@ -17,8 +17,13 @@ services:
 
   mysql:
     container_name: mysql
+
+    # TO-DO: run initialization *.sql scripts at start-up
     #image: registry.redhat.io/rhel8/mysql-80:1-258
-    image: docker.io/mysql:8.0.33
+
+    # Pushed from docker.io to quay.io (to avoid rate-limiting at docker hub)
+    image: quay.io/jbride/mysql:8.0.33
+
     ports:
       - "3306:3306"
     environment:

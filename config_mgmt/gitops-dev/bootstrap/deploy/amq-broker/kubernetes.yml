@@ -1,0 +1,27 @@
+---
+apiVersion: broker.amq.io/v1beta1
+kind: ActiveMQArtemis
+metadata:
+  name: artemis
+  namespace: user1-camel-orders
+spec:
+  console:
+    expose: true
+  acceptors:
+    - name: mqtt
+      port: 1883
+      protocols: mqtt
+    - name: amqp
+      port: 5672
+      protocols: amqp
+  adminPassword: admin
+  adminUser: admin
+  deploymentPlan:
+    image: placeholder
+    jolokiaAgentEnabled: false
+    journalType: nio
+    managementRBACEnabled: true
+    messageMigration: false
+    persistenceEnabled: false
+    requireLogin: false
+    size: 1
