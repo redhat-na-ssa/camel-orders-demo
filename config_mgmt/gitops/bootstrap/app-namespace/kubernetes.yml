@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    kubernetes.io/metadata.name: user1-camel-orders
+  name: user1-camel-orders
+spec:
+  finalizers:
+  - kubernetes
