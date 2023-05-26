@@ -35,15 +35,15 @@
   },
   "spec" : {
     "ports" : [ {
-      "name" : "http",
-      "port" : 8080,
-      "protocol" : "TCP",
-      "targetPort" : 9090
-    }, {
       "name" : "https",
       "port" : 443,
       "protocol" : "TCP",
       "targetPort" : 8443
+    }, {
+      "name" : "http",
+      "port" : 8080,
+      "protocol" : "TCP",
+      "targetPort" : 8080
     } ],
     "selector" : {
       "app.kubernetes.io/name" : "camel-aggregator"
@@ -93,7 +93,7 @@
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/live",
-              "port" : 9090,
+              "port" : 8080,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,
@@ -103,19 +103,19 @@
           },
           "name" : "camel-aggregator",
           "ports" : [ {
-            "containerPort" : 8443,
-            "name" : "https",
+            "containerPort" : 8080,
+            "name" : "http",
             "protocol" : "TCP"
           }, {
-            "containerPort" : 9090,
-            "name" : "http",
+            "containerPort" : 8443,
+            "name" : "https",
             "protocol" : "TCP"
           } ],
           "readinessProbe" : {
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/ready",
-              "port" : 9090,
+              "port" : 8080,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,
@@ -137,7 +137,7 @@
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/started",
-              "port" : 9090,
+              "port" : 8080,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,
@@ -149,13 +149,17 @@
             "mountPath" : "/deployments/config",
             "name" : "config",
             "readOnly" : false
+          }, {
+            "mountPath" : "/data",
+            "name" : "appdata",
+            "readOnly" : false
           } ]
         } ],
         "initContainers" : [ {
-          "args" : [ "pod", "-lstrimzi.io/name=kafka-connect-connect" ],
+          "args" : [ "pod", "-lstatefulset.kubernetes.io/pod-name=artemis-ss-0" ],
           "image" : "quay.io/jbride/k8s-wait-for:no-root-v1.7",
           "imagePullPolicy" : "IfNotPresent",
-          "name" : "check-kafka"
+          "name" : "check-artemis"
         } ],
         "serviceAccountName" : "camel-aggregator",
         "volumes" : [ {
@@ -169,6 +173,12 @@
             "optional" : false
           },
           "name" : "config"
+        }, {
+          "name" : "appdata",
+          "persistentVolumeClaim" : {
+            "claimName" : "camel-aggregator",
+            "readOnly" : false
+          }
         } ]
       }
     }

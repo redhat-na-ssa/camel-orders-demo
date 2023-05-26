@@ -38,7 +38,7 @@
       "name" : "http",
       "port" : 8080,
       "protocol" : "TCP",
-      "targetPort" : 7070
+      "targetPort" : 8080
     }, {
       "name" : "https",
       "port" : 443,
@@ -93,7 +93,7 @@
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/live",
-              "port" : 7070,
+              "port" : 8080,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,
@@ -107,7 +107,7 @@
             "name" : "https",
             "protocol" : "TCP"
           }, {
-            "containerPort" : 7070,
+            "containerPort" : 8080,
             "name" : "http",
             "protocol" : "TCP"
           } ],
@@ -115,7 +115,7 @@
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/ready",
-              "port" : 7070,
+              "port" : 8080,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,
@@ -137,7 +137,7 @@
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/started",
-              "port" : 7070,
+              "port" : 8080,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,
@@ -152,10 +152,15 @@
           } ]
         } ],
         "initContainers" : [ {
-          "args" : [ "pod", "-lstrimzi.io/name=kafka-connect-connect" ],
+          "args" : [ "pod", "-lapp.kubernetes.io/name=mysql" ],
           "image" : "quay.io/jbride/k8s-wait-for:no-root-v1.7",
           "imagePullPolicy" : "IfNotPresent",
-          "name" : "check-kafka"
+          "name" : "check-mysql"
+        }, {
+          "args" : [ "pod", "-lstatefulset.kubernetes.io/pod-name=artemis-ss-0" ],
+          "image" : "quay.io/jbride/k8s-wait-for:no-root-v1.7",
+          "imagePullPolicy" : "IfNotPresent",
+          "name" : "check-artemis"
         } ],
         "serviceAccountName" : "camel-processor",
         "volumes" : [ {

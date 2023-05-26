@@ -1,0 +1,14 @@
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: camel-aggregator
+  labels:
+    app: camel-aggregator
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi

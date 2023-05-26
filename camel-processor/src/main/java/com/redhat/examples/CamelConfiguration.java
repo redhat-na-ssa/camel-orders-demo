@@ -19,15 +19,25 @@ package com.redhat.examples;
 import com.redhat.examples.json.ProcessedOrder;
 import com.redhat.examples.xml.RawOrder;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
+
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.sql.DataSource;
+
 import org.apache.camel.AggregationStrategy;
+import org.apache.camel.CamelContext;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
@@ -38,7 +48,22 @@ public class CamelConfiguration extends RouteBuilder {
   @Inject
   OrderMapping orderMapping;
 
+  @Inject
+  CamelContext context;
 
+  @PostConstruct
+  void start() {
+
+    // https://camel.apache.org/manual/registry.html
+    Map<String, DataSource> dSources = context.getRegistry().findByTypeWithName(javax.sql.DataSource.class);
+    if(dSources.size() == 0)
+      throw new RuntimeException("No datasources in camel context registry");
+    
+    for(Entry<String,DataSource> dSource: dSources.entrySet()){
+      log.infov("Datasource found in camel registry:  name =", dSource.getKey());
+
+    }
+  }
   
   private AggregationStrategy descriptionEnrichmentStrategy() {
     return (Exchange original, Exchange resource) -> {
@@ -69,7 +94,7 @@ public class CamelConfiguration extends RouteBuilder {
     ;
     
     from("direct:fetchDescription")
-      .to("sql:select description from ITEM_DESCRIPTION where id=:#${body.item}?dataSource=#camel-ds&outputType=SelectOne")
+      .to("sql:select description from ITEM_DESCRIPTION where id=:#${body.item}?outputType=SelectOne")
     ;
   }
 }

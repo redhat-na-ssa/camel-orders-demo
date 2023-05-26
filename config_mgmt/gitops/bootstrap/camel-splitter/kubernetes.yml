@@ -117,13 +117,16 @@ spec:
             - mountPath: /deployments/config
               name: config
               readOnly: false
+            - mountPath: /data
+              name: appdata
+              readOnly: false
       initContainers:
         - args:
             - pod
-            - -lstrimzi.io/name=kafka-connect-connect
+            - -lstatefulset.kubernetes.io/pod-name=artemis-ss-0
           image: quay.io/jbride/k8s-wait-for:no-root-v1.7
           imagePullPolicy: IfNotPresent
-          name: check-kafka
+          name: check-artemis
       serviceAccountName: camel-splitter
       volumes:
         - configMap:
@@ -134,3 +137,7 @@ spec:
             name: camel-splitter
             optional: false
           name: config
+        - name: appdata
+          persistentVolumeClaim:
+            claimName: camel-splitter
+            readOnly: false

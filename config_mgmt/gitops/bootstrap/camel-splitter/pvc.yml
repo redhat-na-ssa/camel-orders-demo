@@ -1,0 +1,14 @@
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: camel-splitter
+  labels:
+    app: camel-splitter
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
