@@ -83,7 +83,6 @@ public class CamelConfiguration extends RouteBuilder {
         RawOrder raw = (RawOrder)e.getIn().getBody();
         e.getIn().setBody(orderMapping.rawToProcessed(raw));
       })
-      //.to("dozer:rawToProcessed?sourceModel=com.redhat.examples.xml.RawOrder&targetModel=com.redhat.examples.json.ProcessedOrder")
       .enrich()
         .constant("direct:fetchDescription")
         .aggregationStrategy(descriptionEnrichmentStrategy())

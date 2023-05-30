@@ -1,0 +1,150 @@
+:scrollbar:
+:data-uri:
+:toc2:
+:linkattrs:
+
+
+= camel-orders-demo
+
+image::./images/demo_architecture.png[Demo Architecture]
+
+:numbered:
+
+== Start
+
+Clone this project to your local environment and change directory into the project.
+
+=== Local
+
+==== Pre-Reqs
+
+This project includes a _docker-compose_ config file that allows for deployment of a relational database and messaging broker as containers in your local environment.
+
+- docker-compose
+- link:http://maven.apache.org[Apache Maven 3.x]
+- JDK 1.11 (or more recent)
+
+
+==== Run in _dev_ mode:
+
+. Review the contents of the link:etc/docker-compose[docker-compose] file included in this project.
+. Start all linux containers:
++
+-----
+$ docker-compose -f etc/docker-compose.yaml up -d
+-----
++
+NOTE:  If underlying linux container system in use in your local environment is podman, then follow this link:https://fedoramagazine.org/use-docker-compose-with-podman-to-orchestrate-containers-on-fedora/[set-up guide].
+
+The project consists of three quarkus apps that can be run in _dev_ mode.
+
+. Execute each of the following in its own separate terminal window/tab.
++
+-----
+$ ( cd camel-splitter; mvn clean quarkus:dev )
+$ ( cd camel-processor; mvn clean quarkus:dev )
+$ ( cd camel-aggregator; mvn clean quarkus:dev )
+-----
+
+=== OpenShift
+
+==== Pre-Reqs
+
+- OpenShift Container Platform 4.12 (or more recent)
+. *Resource requirements*
++
+Resource requirements as needed by the app (doesn’t include resource requirements of Openshift to support itself) is as follows:
+
+.. RAM: 6 GB
+
+.. CPU: 8
+
+.. Storage: 10 PVCs of type RWO (no RWX requirement) and each of size 5 GiB
+
+. *cluster-admin credentials* to this OpenShift cluster are needed
+
+. *wildcard certificate for routes*
++
+Out-of-the-box install of OCP typically includes self-signed certs to secure the cluster's routes.  It is highly recommended that a wildcard cert issued by a well-known certificate authority (ie:  ZeroSSL) be applied to the cluster.
+
+- *oc utility* (of version correspsonding to OCP cluster) installed locally
++
+All versions of this utility are available at either of the following:
+
+.. https://access.redhat.com/downloads/content/290 
++
+RHN subscription required
+
+.. https://mirror.openshift.com/pub/openshift-v4/clients/ocp/?C=M;O=D
++
+Accessible without a RHN subscription
+
+==== Deployment
+
+. Deployment Red Hat AMQ Broker operator and create `user1-camel-orders` namespace:
++
+-----
+$ oc apply -k config_mgmt/gitops/bootstrap/infra/
+-----
+
+. Wait until AMQ Broker operator is running in `openshift-operators` namespace:
++
+-----
+$ 
+-----
+
+. Deploy all app into `user1-camel-orders` namespace:
++
+-----
+$ oc apply -k config_mgmt/gitops/bootstrap/apps
+-----
+
+== Test
+
+. Set URLs of the various apps of this projectas environment variables:
+
+.. If application is deployed locally:
++
+-----
+$ export CAMEL_SPLITTER_URL=http://localhost:8080 \
+  && export CAMEL_AGGREGATOR_URL=http://localhost:9090
+-----
+
+.. If application is deployed in OpenShift:
++
+-----
+$ export CAMEL_SPLITTER_URL=$() \
+  && export CAMEL_AGGREGATOR_URL=$()
+-----
+
+. Invoke the `camel-splitter` RESTful endpoint by POSTing a `multiform` request:
++
+-----
+$ curl -X POST \
+       -F '@file=@./camel-splitter/src/test/data/orders-01.xml' \
+       "$CAMEL_SPLITTER_URL/camel/files/"
+-----
+
+. To list the processed files:
++
+-----
+$ curl -X GET \
+      -H 'Accept: text/plain' \
+       "http://localhost:9090/camel/files/"
+-----
+
+. To see contents of a file (replace the file name in the url)
++
+-----
+curl -X GET \
+    -H 'Accept: application/json' \
+    "http://localhost:9090/camel/files/orders-x-xxxxxxxxxx.json"
+-----
+
+== Related Jiras
+
+. link:https://issues.redhat.com/browse/CEQ-4878[JMS components connection pooling (generic client, full support)]
++
+Discusses connection pooling to IBM MQ Series
+
+. link:https://issues.redhat.com/browse/CEQ-6167[Support extension: camel-quarkus-ldap]
