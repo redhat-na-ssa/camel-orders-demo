@@ -18,14 +18,19 @@ Clone this project to your local environment and change directory into the proje
 
 ==== Pre-Reqs
 
-This project includes a _docker-compose_ config file that allows for deployment of a relational database and messaging broker as containers in your local environment.
+This project includes a _docker-compose_ file that specifies deployment of a relational database (mysql) and messaging broker(activemq-artemis) as containers in your local environment.
 
 - docker-compose
++
+Depending on your environment, either podman or docker can be used to support _docker-compose_.
++
+NOTE:  If underlying linux container system in use in your local environment is podman, then follow this link:https://fedoramagazine.org/use-docker-compose-with-podman-to-orchestrate-containers-on-fedora/[set-up guide].
+
 - link:http://maven.apache.org[Apache Maven 3.x]
-- JDK 1.11 (or more recent)
+- JDK 11 (or more recent)
 
 
-==== Run in _dev_ mode:
+==== Run in _quarkus:dev_ mode:
 
 . Review the contents of the link:etc/docker-compose[docker-compose] file included in this project.
 . Start all linux containers:
@@ -33,12 +38,11 @@ This project includes a _docker-compose_ config file that allows for deployment 
 -----
 $ docker-compose -f etc/docker-compose.yaml up -d
 -----
-+
-NOTE:  If underlying linux container system in use in your local environment is podman, then follow this link:https://fedoramagazine.org/use-docker-compose-with-podman-to-orchestrate-containers-on-fedora/[set-up guide].
 
-The project consists of three quarkus apps that can be run in _dev_ mode.
 
-. Execute each of the following in its own separate terminal window/tab.
+. The project consists of three quarkus apps that can be run in _dev_ mode.
+
+.. Execute each of the following in its own separate terminal window/tab.
 +
 -----
 $ ( cd camel-splitter; mvn clean quarkus:dev )
@@ -57,9 +61,9 @@ Resource requirements as needed by the app (doesn’t include resource requireme
 
 .. RAM: 6 GB
 
-.. CPU: 8
+.. CPU: 6
 
-.. Storage: 10 PVCs of type RWO (no RWX requirement) and each of size 5 GiB
+.. Storage: 3 PVCs of type RWO (no RWX requirement) and each of size 5 GiB
 
 . *cluster-admin credentials* to this OpenShift cluster are needed
 
@@ -90,13 +94,25 @@ $ oc apply -k config_mgmt/gitops/bootstrap/infra/
 . Wait until AMQ Broker operator is running in `openshift-operators` namespace:
 +
 -----
-$ 
+$ oc wait \
+    --for=condition=ready pod \
+    -l name=amq-broker-operator \
+    -n openshift-operators
 -----
 
 . Deploy all app into `user1-camel-orders` namespace:
 +
 -----
-$ oc apply -k config_mgmt/gitops/bootstrap/apps
+$ oc apply \
+    -k config_mgmt/gitops/bootstrap/apps \
+    -n user1-camel-orders
+-----
+
+. Wait until _camel-aggregator_ app is running in `user1-camel-orders` namespace:
++
+-----
+$ oc rollout status deployment camel-aggregator \
+    -n user1-camel-orders
 -----
 
 == Test
@@ -113,32 +129,62 @@ $ export CAMEL_SPLITTER_URL=http://localhost:8080 \
 .. If application is deployed in OpenShift:
 +
 -----
-$ export CAMEL_SPLITTER_URL=$() \
-  && export CAMEL_AGGREGATOR_URL=$()
+$ export CAMEL_SPLITTER_URL=https://$(oc get route camel-splitter -n user1-camel-orders --template='{{ .spec.host }}') \
+  && export CAMEL_AGGREGATOR_URL=https://$(oc get route camel-aggregator -n user1-camel-orders --template='{{ .spec.host }}')
 -----
 
-. Invoke the `camel-splitter` RESTful endpoint by POSTing a `multiform` request:
+. Invoke the `camel-splitter` RESTful endpoint by POSTing a `multipart/form-data` request:
 +
 -----
 $ curl -X POST \
+       -v \
        -F '@file=@./camel-splitter/src/test/data/orders-01.xml' \
        "$CAMEL_SPLITTER_URL/camel/files/"
 -----
++
+Results should be as follows:
+
+.. Client invoking the POST request:
++
+-----
+HTTP/1.1 200 OK
+
+  ...
+
+upload-BE7625902D3F764-0000000000000002.xmlj
+-----
+
+.. _camel-aggregator_ app:
++
+-----
+05:32:41 INFO  [route5] (Camel (camel-1) thread #2 - JmsConsumer[processed]) Picked up processed order: [{"customer":"1","item":"1","description":"Ball Bearing","quantity":4}]
+05:32:41 INFO  [route5] (Camel (camel-1) thread #2 - JmsConsumer[processed]) Picked up processed order: [{"customer":"1","item":"2","description":"Rotator Splint","quantity":2}]
+05:32:47 INFO  [route5] (Camel (camel-1) thread #3 - Aggregator) Completing aggregate order: [1]
+-----
+
 
 . To list the processed files:
 +
 -----
 $ curl -X GET \
+      -v \
       -H 'Accept: text/plain' \
-       "http://localhost:9090/camel/files/"
+       "$CAMEL_AGGREGATOR_URL/camel/files/"
 -----
 
-. To see contents of a file (replace the file name in the url)
+. To see contents of a file:
+.. Set file name as an env variable:
 +
 -----
-curl -X GET \
+$ export ORDER_FILE_NAME=<change me>
+-----
+
+.. Retrieve contents of file:
++
+-----
+$ curl -X GET \
     -H 'Accept: application/json' \
-    "http://localhost:9090/camel/files/orders-x-xxxxxxxxxx.json"
+    "$CAMEL_AGGREGATOR_URL/camel/files/$ORDER_FILE_NAME"
 -----
 
 == Related Jiras

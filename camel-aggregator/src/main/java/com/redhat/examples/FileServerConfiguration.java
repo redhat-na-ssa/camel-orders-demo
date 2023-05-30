@@ -42,7 +42,7 @@ public class FileServerConfiguration extends RouteBuilder {
   @Override
   public void configure() throws Exception {
     
-    rest("/files")
+    rest("/camel/files")
       .get("/")
         .produces("text/plain")
         .bindingMode(RestBindingMode.off)

@@ -29,7 +29,6 @@ import org.jboss.logging.Logger;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.jms.ConnectionFactory;
 
 @ApplicationScoped
 public class CamelConfiguration extends RouteBuilder {

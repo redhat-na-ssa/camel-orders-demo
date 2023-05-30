@@ -21,9 +21,7 @@ import com.redhat.examples.xml.RawOrder;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;

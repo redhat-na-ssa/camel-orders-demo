@@ -11,3 +11,4 @@ generatorOptions:
 resources:
 - pvc.yml
 - kubernetes.yml
+- route.yml
