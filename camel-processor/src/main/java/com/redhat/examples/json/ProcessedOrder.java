@@ -25,6 +25,9 @@ public class ProcessedOrder {
 
   @JsonProperty
   private String empNum;
+
+  @JsonProperty
+  private String email;
   
   @JsonProperty
   private String item;
@@ -48,6 +51,13 @@ public class ProcessedOrder {
   }
   public void setEmpNum(String empNum) {
     this.empNum = empNum;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+  public void setEmail(String email) {
+    this.email = email;
   }
 
   public String getItem() {

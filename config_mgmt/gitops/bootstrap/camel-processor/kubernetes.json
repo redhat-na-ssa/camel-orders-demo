@@ -35,15 +35,15 @@
   },
   "spec" : {
     "ports" : [ {
+      "name" : "http",
+      "port" : 8080,
+      "protocol" : "TCP",
+      "targetPort" : 8080
+    }, {
       "name" : "https",
       "port" : 443,
       "protocol" : "TCP",
       "targetPort" : 8443
-    }, {
-      "name" : "http",
-      "port" : 8080,
-      "protocol" : "TCP",
-      "targetPort" : 7070
     } ],
     "selector" : {
       "app.kubernetes.io/name" : "camel-processor"
@@ -93,7 +93,7 @@
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/live",
-              "port" : 7070,
+              "port" : 8080,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,
@@ -103,19 +103,19 @@
           },
           "name" : "camel-processor",
           "ports" : [ {
-            "containerPort" : 7070,
-            "name" : "http",
-            "protocol" : "TCP"
-          }, {
             "containerPort" : 8443,
             "name" : "https",
+            "protocol" : "TCP"
+          }, {
+            "containerPort" : 8080,
+            "name" : "http",
             "protocol" : "TCP"
           } ],
           "readinessProbe" : {
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/ready",
-              "port" : 7070,
+              "port" : 8080,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,
@@ -137,7 +137,7 @@
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/started",
-              "port" : 7070,
+              "port" : 8080,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,

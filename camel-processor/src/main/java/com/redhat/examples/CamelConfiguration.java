@@ -161,7 +161,7 @@ public class CamelConfiguration extends RouteBuilder {
         e.getIn().setBody(orderMapping.rawToProcessed(raw));
       })
       .enrich()
-        .constant("direct:fetchEmployeeNumber")
+        .constant("direct:fetchEmployeeEmail")
         .aggregationStrategy(employeeNumEnrichmentStrategy())
       .end()
       .enrich()
@@ -173,7 +173,7 @@ public class CamelConfiguration extends RouteBuilder {
       .to(ExchangePattern.InOnly, "amqp:queue:processed")
     ;
 
-    from("direct:fetchEmployeeNumber")
+    from("direct:fetchEmployeeEmail")
       .process(new Processor() {
 
         @Override
@@ -194,7 +194,8 @@ public class CamelConfiguration extends RouteBuilder {
           if(results.size() > 0) {
             SearchResult searchResult = (SearchResult) results.toArray()[0];
             Attribute mailAttr = searchResult.getAttributes().get(MAIL_ATTRIBUTE);
-            log.info("mailAttr = "+mailAttr);
+            pOrder.setEmail(mailAttr.get(0).toString());
+            //log.info("mailAttr = "+mailAttr.get(0).toString());
           }
         }
   

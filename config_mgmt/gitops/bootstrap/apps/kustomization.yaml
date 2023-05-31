@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
 - ../amq-broker-app
 - ../app-db
+- ../app-ldap
 - ../camel-splitter
 - ../camel-processor
 - ../camel-aggregator

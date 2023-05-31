@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+  - name: openldap
+    files:
+      - ldap-example-users-2.ldif
+generatorOptions:
+  disableNameSuffixHash: true # use a static name
+resources:
+
+# TO-DO:  oc adm policy add-scc-to-user anyuid -z openldap -n user1-camel-orders
+- kubernetes.yml
