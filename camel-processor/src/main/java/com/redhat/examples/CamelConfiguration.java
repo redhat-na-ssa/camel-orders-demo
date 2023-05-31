@@ -183,6 +183,8 @@ public class CamelConfiguration extends RouteBuilder {
           String customerId = pOrder.getCustomer();
           StringBuilder ldapFilter = new StringBuilder("(").append(EMPLOYEE_NUMBER).append("=").append(customerId).append(")");
           log.info("Searching ldap for user with following filter: "+ldapFilter.toString());
+
+          // https://camel.apache.org/manual/producertemplate.html#_send_vs_request_methods
           ProducerTemplate template = exchange.getContext().createProducerTemplate();
           Collection results = template.requestBody(
             "ldap:ldapserver?base='ou=People,dc=example,dc=org'",

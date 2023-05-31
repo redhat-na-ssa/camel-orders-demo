@@ -45,6 +45,12 @@
       <artifactId>camel-quarkus-bean</artifactId>
     </dependency>
 
+    <!-- REST -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
+    </dependency>
+
     <!-- SQL -->
     <dependency>
       <groupId>org.apache.camel.quarkus</groupId>
@@ -53,6 +59,10 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-agroal</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-hibernate-orm-panache</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
