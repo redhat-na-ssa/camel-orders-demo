@@ -10,11 +10,13 @@ import com.redhat.examples.xml.RawOrder;
 public interface OrderMapping {
 
     @Mapping(source="customerId", target="customer")
+    @Mapping(source="employeeNumber", target="empNum")
     @Mapping(source="itemId", target="item")
     @Mapping(source="quantity", target="quantity")
     ProcessedOrder rawToProcessed(RawOrder rawOrder);
 
     @Mapping(source="customer", target="customerId")
+    @Mapping(source="empNum", target="employeeNumber")
     @Mapping(source="item", target="itemId")
     @Mapping(source="quantity", target="quantity")
     RawOrder processedToRaw(ProcessedOrder processedOrder);

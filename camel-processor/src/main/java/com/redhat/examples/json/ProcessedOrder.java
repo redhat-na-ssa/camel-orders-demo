@@ -22,6 +22,9 @@ public class ProcessedOrder {
   
   @JsonProperty
   private String customer;
+
+  @JsonProperty
+  private String empNum;
   
   @JsonProperty
   private String item;
@@ -38,6 +41,13 @@ public class ProcessedOrder {
 
   public void setCustomer(String customer) {
     this.customer = customer;
+  }
+
+  public String getEmpNum() {
+    return empNum;
+  }
+  public void setEmpNum(String empNum) {
+    this.empNum = empNum;
   }
 
   public String getItem() {

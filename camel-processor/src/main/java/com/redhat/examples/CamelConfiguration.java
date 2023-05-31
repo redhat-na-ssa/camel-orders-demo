@@ -21,17 +21,33 @@ import com.redhat.examples.xml.RawOrder;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.LoggingLevel;
+import org.apache.camel.Processor;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
+import org.eclipse.microprofile.config.inject.ConfigProperties;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import java.util.Collection;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Supplier;
 
+import javax.naming.Context;
+import javax.naming.NameNotFoundException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
+import javax.naming.directory.SearchResult;
 import javax.sql.DataSource;
 
 import org.apache.camel.AggregationStrategy;
@@ -43,11 +59,39 @@ public class CamelConfiguration extends RouteBuilder {
 
   private static final Logger log = Logger.getLogger(CamelConfiguration.class);
 
+  protected static final String MAIL_ATTRIBUTE = "mail";
+  protected static final String EMPLOYEE_NUMBER = "employeeNumber";
+
   @Inject
   OrderMapping orderMapping;
 
   @Inject
   CamelContext context;
+
+  @ConfigProperty(name = "ldap.url")
+  String ldapURL;
+
+  @ConfigProperty(name = "ldap.securityPrincipal")
+  String ldapPrincipal;
+
+  @ConfigProperty(name = "ldap.securityCredentials")
+  String ldapCredentials;
+
+  @Produces
+  @Dependent 
+  @Named("ldapserver")
+  public DirContext createLdapServer() throws Exception {
+    log.infov("createLdapServer() {0} , {1}", this.ldapURL, this.ldapPrincipal);
+      Hashtable<String, String> env = new Hashtable<>();
+      env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+      env.put(Context.PROVIDER_URL, this.ldapURL);
+      env.put(Context.SECURITY_AUTHENTICATION, "none");
+      env.put(Context.SECURITY_AUTHENTICATION, "simple");
+      env.put(Context.SECURITY_PRINCIPAL, this.ldapPrincipal);
+      env.put(Context.SECURITY_CREDENTIALS, this.ldapCredentials);
+
+      return new InitialDirContext(env);
+  }
 
   @PostConstruct
   void start() {
@@ -62,6 +106,16 @@ public class CamelConfiguration extends RouteBuilder {
 
     }
   }
+
+  private AggregationStrategy employeeNumEnrichmentStrategy() {
+    return (Exchange original, Exchange resource) -> {
+      if (resource.getIn().getBody() != null) {
+        String employeeNumber = resource.getIn().getBody(String.class);
+        original.getIn().getBody(ProcessedOrder.class).setEmpNum(employeeNumber);
+      }
+      return original;
+    };
+  }
   
   private AggregationStrategy descriptionEnrichmentStrategy() {
     return (Exchange original, Exchange resource) -> {
@@ -74,6 +128,31 @@ public class CamelConfiguration extends RouteBuilder {
   
   @Override
   public void configure() throws Exception {
+
+    onException((CamelOrdersException.class)).process(new Processor() {
+
+      @Override
+      public void process(Exchange exchange) throws Exception {
+        log.error("App is throwing CamelOrdersException");
+        Exception e = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
+        e.printStackTrace();
+      }
+
+    }).handled(true);
+
+    onException((NameNotFoundException.class)).process(new Processor() {
+
+      @Override
+      public void process(Exchange exchange) throws Exception {
+        log.error("App is throwing NameNotFound exception");
+
+        // https://camel.apache.org/manual/faq/why-is-the-exception-null-when-i-use-onexception.html
+        Exception e = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
+        e.printStackTrace();
+      }
+
+    }).handled(true);
+
     from("amqp:queue:raw?acknowledgementModeName=CLIENT_ACKNOWLEDGE")
       .log(LoggingLevel.INFO, "Picked up raw order: [${body}]")
       .unmarshal().jaxb("com.redhat.examples.xml")
@@ -82,6 +161,10 @@ public class CamelConfiguration extends RouteBuilder {
         e.getIn().setBody(orderMapping.rawToProcessed(raw));
       })
       .enrich()
+        .constant("direct:fetchEmployeeNumber")
+        .aggregationStrategy(employeeNumEnrichmentStrategy())
+      .end()
+      .enrich()
         .constant("direct:fetchDescription")
         .aggregationStrategy(descriptionEnrichmentStrategy())
       .end()
@@ -89,6 +172,34 @@ public class CamelConfiguration extends RouteBuilder {
       .log(LoggingLevel.INFO, "Sending processed order: [${body}]")
       .to(ExchangePattern.InOnly, "amqp:queue:processed")
     ;
+
+    from("direct:fetchEmployeeNumber")
+      .process(new Processor() {
+
+        @Override
+        public void process(Exchange exchange) throws Exception {
+
+          ProcessedOrder pOrder = (ProcessedOrder)exchange.getIn().getBody();
+          String customerId = pOrder.getCustomer();
+          StringBuilder ldapFilter = new StringBuilder("(").append(EMPLOYEE_NUMBER).append("=").append(customerId).append(")");
+          log.info("Searching ldap for user with following filter: "+ldapFilter.toString());
+          ProducerTemplate template = exchange.getContext().createProducerTemplate();
+          Collection results = template.requestBody(
+            "ldap:ldapserver?base='ou=People,dc=example,dc=org'",
+            ldapFilter.toString(), 
+            Collection.class
+          );
+
+          log.info("# of employees found in ldap = "+results.size());
+          if(results.size() > 0) {
+            SearchResult searchResult = (SearchResult) results.toArray()[0];
+            Attribute mailAttr = searchResult.getAttributes().get(MAIL_ATTRIBUTE);
+            log.info("mailAttr = "+mailAttr);
+          }
+        }
+  
+      });
+      
     
     from("direct:fetchDescription")
       .to("sql:select description from ITEM_DESCRIPTION where id=:#${body.item}?outputType=SelectOne")

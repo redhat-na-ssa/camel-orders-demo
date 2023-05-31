@@ -51,6 +51,20 @@ services:
     networks:
       - rht-ml
 
+  openldap:
+    container_name: openldap
+    image: docker.io/osixia/openldap:1.5.0
+    restart: always
+    ports:
+      - "3389:389"
+      - "6636:636"
+    command: [--copy-service]
+    volumes:
+    - ./openldap/ldap-example-users-2.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/ldap-example-users-2.ldif:bind
+    #- ./openldap/ldap-generated.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/ldap-generated.ldif:bind
+    networks:
+      - rht-ml
+
 networks:
   rht-ml:
     name: rht-ml

@@ -24,6 +24,7 @@ import jakarta.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "order")
 @XmlType(propOrder = { "customerId",
+                       "employeeNumber",
                        "itemId",
                        "quantity" })
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -31,6 +32,9 @@ public class RawOrder {
   
   @XmlElement(name = "customer-id")
   private String customerId;
+
+  @XmlElement(name = "employee-number")
+  private String employeeNumber;
   
   @XmlElement(name = "item-id")
   private String itemId;
@@ -44,6 +48,14 @@ public class RawOrder {
 
   public void setCustomerId(String customerId) {
     this.customerId = customerId;
+  }
+
+  public String getEmployeeNumber() {
+    return employeeNumber;
+  }
+
+  public void setEmployeeNumber(String employeeNumber) {
+    this.employeeNumber = employeeNumber;
   }
 
   public String getItemId() {
