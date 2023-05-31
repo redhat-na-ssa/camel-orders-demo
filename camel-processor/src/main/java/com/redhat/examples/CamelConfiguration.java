@@ -77,6 +77,9 @@ public class CamelConfiguration extends RouteBuilder {
   @ConfigProperty(name = "ldap.securityCredentials")
   String ldapCredentials;
 
+  @ConfigProperty(name = "quarkus.http.port")
+  int itemDescriptionRESTPort;
+
   @Produces
   @Dependent 
   @Named("ldapserver")
@@ -165,7 +168,7 @@ public class CamelConfiguration extends RouteBuilder {
         .aggregationStrategy(employeeNumEnrichmentStrategy())
       .end()
       .enrich()
-        .constant("direct:fetchDescription")
+        .constant("direct:fetchDescriptionREST")
         .aggregationStrategy(descriptionEnrichmentStrategy())
       .end()
       .marshal().json(JsonLibrary.Jackson, false)
@@ -204,6 +207,9 @@ public class CamelConfiguration extends RouteBuilder {
       });
       
     
+    from("direct:fetchDescriptionREST")
+      .toD("http://localhost:"+itemDescriptionRESTPort+"/itemDescription/description/${body.item}"+"?httpMethod=GET")
+    ;
     from("direct:fetchDescription")
       .to("sql:select description from ITEM_DESCRIPTION where id=:#${body.item}?outputType=SelectOne")
     ;

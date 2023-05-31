@@ -2,8 +2,6 @@ package com.redhat.examples;
 
 import java.util.List;
 
-import com.redhat.ItemDescription;
-
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -27,5 +25,12 @@ public class ItemDescriptionResource {
         return ItemDescription.findById(id);
     }
 
+    @GET
+    @Path("/description/{id}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getDescription(String id) {
+        ItemDescription iDescription = ItemDescription.findById(id);
+        return iDescription.getDescription();
+    }
     
 }

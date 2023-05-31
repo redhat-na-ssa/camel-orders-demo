@@ -51,6 +51,12 @@
       <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
     </dependency>
 
+    <!-- REST Client -->
+    <dependency>
+      <groupId>org.apache.camel.quarkus</groupId>
+      <artifactId>camel-quarkus-http</artifactId>
+    </dependency>
+
     <!-- SQL -->
     <dependency>
       <groupId>org.apache.camel.quarkus</groupId>
