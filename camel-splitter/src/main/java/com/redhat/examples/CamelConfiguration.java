@@ -16,7 +16,7 @@
  */
 package com.redhat.examples;
 
-import java.util.Random;
+import java.util.UUID;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
@@ -33,8 +33,6 @@ import jakarta.inject.Inject;
 public class CamelConfiguration extends RouteBuilder {
 
   private static final Logger log = Logger.getLogger(CamelConfiguration.class);
-
-  private static Random randomObj = new Random();
 
   @Inject
   private SplitterProperties props;
@@ -65,13 +63,13 @@ public class CamelConfiguration extends RouteBuilder {
          * 
          * Subsequently, the following generates a new random Id as the breadcrumb that will propogate to all downstream camel routes
          */
-        e.getIn().setHeader(Exchange.BREADCRUMB_ID, Integer.toString(randomObj.nextInt()));
+        e.getIn().setHeader(Exchange.BREADCRUMB_ID, UUID.randomUUID().toString());
       })
 
       .log(LoggingLevel.INFO, "Picked up orders file: [${headers.CamelFileName}]")
       .split(xpath("/orders/order"))
         .log(LoggingLevel.INFO, "Sending order: [${body}]")
-        .to(ExchangePattern.InOnly, "amqp:queue:raw?useMessageIDAsCorrelationID=true")
+        .to(ExchangePattern.InOnly, "amqp:queue:raw")
       .end()
     ;
   }

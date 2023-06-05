@@ -160,7 +160,8 @@ public class CamelConfiguration extends RouteBuilder {
 
     }).handled(true);
 
-    from("amqp:queue:raw?acknowledgementModeName=CLIENT_ACKNOWLEDGE")
+    from("amqp:queue:raw")
+      .log(LoggingLevel.INFO, "[${headers}]")
       .log(LoggingLevel.INFO, "Picked up raw order: [${body}]")
       .unmarshal().jaxb("com.redhat.examples.xml")
       .process(e -> {

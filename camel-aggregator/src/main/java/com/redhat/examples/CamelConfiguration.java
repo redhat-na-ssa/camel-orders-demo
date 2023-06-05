@@ -63,7 +63,8 @@ public class CamelConfiguration extends RouteBuilder {
   @Override
   public void configure() throws Exception {
     
-    from("amqp:queue:processed?acknowledgementModeName=CLIENT_ACKNOWLEDGE")
+    from("amqp:queue:processed")
+      .log(LoggingLevel.INFO, "[${headers}]")
       .log(LoggingLevel.INFO, "Picked up processed order: [${body}]")
       .unmarshal().json(JsonLibrary.Jackson, Map.class)
       .aggregate()
@@ -72,7 +73,6 @@ public class CamelConfiguration extends RouteBuilder {
         .completionTimeout(5000L)
         .completionSize(10)
           .log(LoggingLevel.INFO, "Completing aggregate order: [${exchangeProperty.CamelAggregatedCorrelationKey}]")
-          //.transform().groovy("['orders':request.body]")
           .marshal().json(JsonLibrary.Jackson, true)
           .setHeader("CurrentTimeMillis", method(System.class, "currentTimeMillis"))
           .to(ExchangePattern.InOnly, String.format("file:%s?fileName=order-${exchangeProperty.CamelAggregatedCorrelationKey}-${header.CurrentTimeMillis}.json", props.dir()))
