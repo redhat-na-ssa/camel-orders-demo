@@ -17,6 +17,7 @@
 package com.redhat.examples;
 
 import com.redhat.examples.json.ProcessedOrder;
+import com.redhat.examples.utils.BaseUtils;
 import com.redhat.examples.xml.RawOrder;
 
 import jakarta.annotation.PostConstruct;
@@ -140,7 +141,7 @@ public class CamelConfiguration extends RouteBuilder {
 
       @Override
       public void process(Exchange exchange) throws Exception {
-        log.error("App is throwing CamelOrdersException");
+        log.error("${headers.X-CORRELATION-ID} : App is throwing CamelOrdersException");
         Exception e = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
         e.printStackTrace();
       }
@@ -151,7 +152,7 @@ public class CamelConfiguration extends RouteBuilder {
 
       @Override
       public void process(Exchange exchange) throws Exception {
-        log.error("App is throwing NamingException");
+        log.error("${headers.X-CORRELATION-ID} : App is throwing NamingException");
 
         // https://camel.apache.org/manual/faq/why-is-the-exception-null-when-i-use-onexception.html
         Exception e = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
@@ -161,8 +162,8 @@ public class CamelConfiguration extends RouteBuilder {
     }).handled(true);
 
     from("amqp:queue:raw")
-      .log(LoggingLevel.INFO, "[${headers}]")
-      .log(LoggingLevel.INFO, "Picked up raw order: [${body}]")
+      .log(LoggingLevel.DEBUG, "[${headers}]")
+      .log(LoggingLevel.INFO, "${headers.X-CORRELATION-ID} : Picked up raw order: [${body}]")
       .unmarshal().jaxb("com.redhat.examples.xml")
       .process(e -> {
         RawOrder raw = (RawOrder)e.getIn().getBody();
@@ -177,7 +178,7 @@ public class CamelConfiguration extends RouteBuilder {
         .aggregationStrategy(descriptionEnrichmentStrategy())
       .end()
       .marshal().json(JsonLibrary.Jackson, false)
-      .log(LoggingLevel.INFO, "Sending processed order: [${body}]")
+      .log(LoggingLevel.INFO, "${headers.X-CORRELATION-ID} : Sending processed order: [${body}]")
       .to(ExchangePattern.InOnly, "amqp:queue:processed")
     ;
 
@@ -190,7 +191,7 @@ public class CamelConfiguration extends RouteBuilder {
           ProcessedOrder pOrder = (ProcessedOrder)exchange.getIn().getBody();
           String customerId = pOrder.getCustomer();
           StringBuilder ldapFilter = new StringBuilder("(").append(EMPLOYEE_NUMBER).append("=").append(customerId).append(")");
-          log.info("Searching ldap for user with following filter: "+ldapFilter.toString());
+          log.info(exchange.getIn().getHeader(BaseUtils.X_CORRELATION_ID)+" : Searching ldap for user with following filter: "+ldapFilter.toString());
 
           // https://camel.apache.org/manual/producertemplate.html#_send_vs_request_methods
           ProducerTemplate template = exchange.getContext().createProducerTemplate();
@@ -200,12 +201,11 @@ public class CamelConfiguration extends RouteBuilder {
             Collection.class
           );
 
-          log.info("# of employees found in ldap = "+results.size());
+          log.debug(exchange.getIn().getHeader(BaseUtils.X_CORRELATION_ID)+" : # of employees found in ldap = "+results.size());
           if(results.size() > 0) {
             SearchResult searchResult = (SearchResult) results.toArray()[0];
             Attribute mailAttr = searchResult.getAttributes().get(MAIL_ATTRIBUTE);
             pOrder.setEmail(mailAttr.get(0).toString());
-            //log.info("mailAttr = "+mailAttr.get(0).toString());
           }
         }
   

@@ -25,6 +25,8 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.jboss.logging.Logger;
 
+import com.redhat.examples.utils.BaseUtils;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -54,6 +56,9 @@ public class CamelConfiguration extends RouteBuilder {
 
       .process( e -> {
         /*
+         * Example using Camel's breadcrumbId 
+         * 
+         * 
          * https://people.apache.org/~dkulp/camel/mdc-logging.html
          *    When enabled Camel will enrich the Camel Message by adding a header to it with the key breadcrumbId containing the id. 
          *    Camel will use the messageId if no existing breadcrumbId was found in the message.
@@ -64,9 +69,19 @@ public class CamelConfiguration extends RouteBuilder {
          * Subsequently, the following generates a new random Id as the breadcrumb that will propogate to all downstream camel routes
          */
         e.getIn().setHeader(Exchange.BREADCRUMB_ID, UUID.randomUUID().toString());
+
+
+        /* Example using Mulesoft's CorrelationId component
+         *   https://docs.mulesoft.com/mule-runtime/4.4/correlation-id
+         */
+        String xCorrelationId = e.getIn().getHeader(BaseUtils.X_CORRELATION_ID, String.class);
+        if(xCorrelationId == null){
+          e.getIn().setHeader(BaseUtils.X_CORRELATION_ID, UUID.randomUUID().toString());
+        }
+
       })
 
-      .log(LoggingLevel.INFO, "Picked up orders file: [${headers.CamelFileName}]")
+      .log(LoggingLevel.INFO, "${headers.X-CORRELATION-ID} : Picked up orders file: [${headers.CamelFileName}]")
       .split(xpath("/orders/order"))
         .log(LoggingLevel.INFO, "Sending order: [${body}]")
         .to(ExchangePattern.InOnly, "amqp:queue:raw")

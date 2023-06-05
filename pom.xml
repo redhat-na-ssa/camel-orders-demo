@@ -12,6 +12,7 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>base</module>
     <module>camel-aggregator</module>
     <module>camel-processor</module>
     <module>camel-splitter</module>

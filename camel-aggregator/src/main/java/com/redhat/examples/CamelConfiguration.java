@@ -64,15 +64,15 @@ public class CamelConfiguration extends RouteBuilder {
   public void configure() throws Exception {
     
     from("amqp:queue:processed")
-      .log(LoggingLevel.INFO, "[${headers}]")
-      .log(LoggingLevel.INFO, "Picked up processed order: [${body}]")
+      .log(LoggingLevel.DEBUG, "[${headers}]")
+      .log(LoggingLevel.INFO, "${headers.X-CORRELATION-ID} : Picked up processed order: [${body}]")
       .unmarshal().json(JsonLibrary.Jackson, Map.class)
       .aggregate()
         .simple("${body[customer]}")
         .aggregationStrategy(this.orderAggregationStrategy())
         .completionTimeout(5000L)
         .completionSize(10)
-          .log(LoggingLevel.INFO, "Completing aggregate order: [${exchangeProperty.CamelAggregatedCorrelationKey}]")
+          .log(LoggingLevel.INFO, "${headers.X-CORRELATION-ID} : Completing aggregate order: [${exchangeProperty.CamelAggregatedCorrelationKey}]")
           .marshal().json(JsonLibrary.Jackson, true)
           .setHeader("CurrentTimeMillis", method(System.class, "currentTimeMillis"))
           .to(ExchangePattern.InOnly, String.format("file:%s?fileName=order-${exchangeProperty.CamelAggregatedCorrelationKey}-${header.CurrentTimeMillis}.json", props.dir()))
