@@ -16,7 +16,6 @@
  */
 package com.redhat.examples;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Set;
@@ -35,8 +34,6 @@ import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class FileUploaderConfiguration extends RouteBuilder {
-
-  
   
   @Inject
   private SplitterProperties props;
@@ -53,7 +50,7 @@ public class FileUploaderConfiguration extends RouteBuilder {
     ;
     
     from("direct:fileUpload")
-      .log(LoggingLevel.INFO, "Uploading file...")
+      .log(LoggingLevel.INFO, "Uploading file... ")
 
       // TO-DO:  Determine why Camel is not automatically setting first attachment to body of message
       .process(new SetFirstAttachmentAsByteArrayInBody())
@@ -95,7 +92,7 @@ class SetFirstAttachmentAsByteArrayInBody implements Processor {
     Object[] aObjs = aMap.values().toArray();
     InputStream iStream = ((Attachment)aObjs[0]).getDataHandler().getInputStream();
     e.getIn().setBody(iStream.readAllBytes());
-  
   }
+
 }
 

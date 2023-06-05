@@ -33,17 +33,15 @@ import org.apache.camel.Processor;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
-import org.eclipse.microprofile.config.inject.ConfigProperties;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Supplier;
 
 import javax.naming.Context;
-import javax.naming.NameNotFoundException;
+import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
@@ -84,20 +82,20 @@ public class CamelConfiguration extends RouteBuilder {
   @Dependent 
   @Named("ldapserver")
   public DirContext createLdapServer() throws Exception {
-    log.infov("createLdapServer() {0} , {1}", this.ldapURL, this.ldapPrincipal);
-      Hashtable<String, String> env = new Hashtable<>();
-      env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-      env.put(Context.PROVIDER_URL, this.ldapURL);
-      env.put(Context.SECURITY_AUTHENTICATION, "none");
-      env.put(Context.SECURITY_AUTHENTICATION, "simple");
-      env.put(Context.SECURITY_PRINCIPAL, this.ldapPrincipal);
-      env.put(Context.SECURITY_CREDENTIALS, this.ldapCredentials);
 
-      return new InitialDirContext(env);
+    Hashtable<String, String> env = new Hashtable<>();
+    env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+    env.put(Context.PROVIDER_URL, this.ldapURL);
+    env.put(Context.SECURITY_AUTHENTICATION, "none");
+    env.put(Context.SECURITY_AUTHENTICATION, "simple");
+    env.put(Context.SECURITY_PRINCIPAL, this.ldapPrincipal);
+    env.put(Context.SECURITY_CREDENTIALS, this.ldapCredentials);
+
+    return new InitialDirContext(env);
   }
 
   @PostConstruct
-  void start() {
+  void start() throws NamingException {
 
     // https://camel.apache.org/manual/registry.html
     Map<String, DataSource> dSources = context.getRegistry().findByTypeWithName(javax.sql.DataSource.class);
@@ -106,8 +104,14 @@ public class CamelConfiguration extends RouteBuilder {
     
     for(Entry<String,DataSource> dSource: dSources.entrySet()){
       log.infov("Datasource found in camel registry:  name =", dSource.getKey());
-
     }
+
+    log.info("start() setting camel breadcrumb configs");
+    context.setUseMDCLogging(true);
+    context.setUseBreadcrumb(true);
+
+    log.infov("start() {0} , {1}", this.ldapURL, this.ldapPrincipal);
+
   }
 
   private AggregationStrategy employeeNumEnrichmentStrategy() {
@@ -143,11 +147,11 @@ public class CamelConfiguration extends RouteBuilder {
 
     }).handled(true);
 
-    onException((NameNotFoundException.class)).process(new Processor() {
+    onException((NamingException.class)).process(new Processor() {
 
       @Override
       public void process(Exchange exchange) throws Exception {
-        log.error("App is throwing NameNotFound exception");
+        log.error("App is throwing NamingException");
 
         // https://camel.apache.org/manual/faq/why-is-the-exception-null-when-i-use-onexception.html
         Exception e = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
