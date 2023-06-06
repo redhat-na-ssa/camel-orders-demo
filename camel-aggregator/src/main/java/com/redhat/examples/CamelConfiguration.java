@@ -16,6 +16,7 @@
  */
 package com.redhat.examples;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import org.apache.camel.ExchangePattern;
@@ -23,12 +24,14 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.language.SimpleExpression;
+import org.apache.camel.opentelemetry.OpenTelemetryTracer;
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.AggregationStrategies;
 import org.jboss.logging.Logger;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -43,11 +46,16 @@ public class CamelConfiguration extends RouteBuilder {
   @Inject
   CamelContext context;
 
+  OpenTelemetryTracer otelTracer;
+
   @PostConstruct
   void start() {
     log.info("start() setting camel breadcrumb configs");
     context.setUseMDCLogging(true);
     context.setUseBreadcrumb(true);
+
+    otelTracer = new OpenTelemetryTracer();
+    otelTracer.init(context);
   }
 
   
@@ -78,5 +86,11 @@ public class CamelConfiguration extends RouteBuilder {
           .to(ExchangePattern.InOnly, String.format("file:%s?fileName=order-${exchangeProperty.CamelAggregatedCorrelationKey}-${header.CurrentTimeMillis}.json", props.dir()))
       .end()
     ;
+  }
+
+  @PreDestroy
+  void stop() throws IOException {
+    if(otelTracer != null)
+      otelTracer.close();
   }
 }

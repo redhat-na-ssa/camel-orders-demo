@@ -38,7 +38,7 @@
       "name" : "http",
       "port" : 8080,
       "protocol" : "TCP",
-      "targetPort" : 9090
+      "targetPort" : 6060
     }, {
       "name" : "https",
       "port" : 443,
@@ -93,7 +93,7 @@
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/live",
-              "port" : 9090,
+              "port" : 6060,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,
@@ -107,7 +107,7 @@
             "name" : "https",
             "protocol" : "TCP"
           }, {
-            "containerPort" : 9090,
+            "containerPort" : 6060,
             "name" : "http",
             "protocol" : "TCP"
           } ],
@@ -115,7 +115,7 @@
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/ready",
-              "port" : 9090,
+              "port" : 6060,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,
@@ -137,7 +137,7 @@
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/started",
-              "port" : 9090,
+              "port" : 6060,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,

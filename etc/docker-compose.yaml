@@ -68,6 +68,41 @@ services:
     networks:
       - rht-ml
 
+#  prometheus:
+#    image: quay.io/prometheus/prometheus:v2.43.0
+#    container_name: prometheus
+#    ports:
+#      - "9090:9090"
+#    volumes:
+#      - ./monitoring/prometheus_scrape_configs.yml:/etc/prometheus/prometheus.yml
+#    networks:
+#      - rht-ml
+
+  jaeger:
+    image: jaegertracing/all-in-one:1
+    container_name: jaeger
+    ports:
+      - "16686:16686" # Jaeger UI
+      - "14268"       # Accept thrift spans
+      - "14250"       # Accept gRPC spans
+    networks:
+      - rht-ml
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.75.0
+    container_name: otel-collector
+    command:
+      - "--config=/conf/otel-collector-config.yml"
+    volumes:
+      - ./monitoring/otel-collector-config.yml:/conf/otel-collector-config.yml
+    ports:
+      - "13133:13133" # health_check extension
+      - "4317:4317"   # OTLP gRPC receiver
+    depends_on:
+      - jaeger
+    networks:
+      - rht-ml
+
 networks:
   rht-ml:
     name: rht-ml

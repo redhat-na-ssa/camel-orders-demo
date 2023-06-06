@@ -16,6 +16,7 @@
  */
 package com.redhat.examples;
 
+import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.camel.CamelContext;
@@ -23,11 +24,13 @@ import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.opentelemetry.OpenTelemetryTracer;
 import org.jboss.logging.Logger;
 
 import com.redhat.examples.utils.BaseUtils;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -42,11 +45,16 @@ public class CamelConfiguration extends RouteBuilder {
   @Inject
   CamelContext context;
 
+  OpenTelemetryTracer otelTracer;
+
   @PostConstruct
   void start() {
     log.info("start() setting camel breadcrumb configs");
     context.setUseMDCLogging(true);
     context.setUseBreadcrumb(true);
+
+    otelTracer = new OpenTelemetryTracer();
+    otelTracer.init(context);
   }
 
   @Override
@@ -87,5 +95,11 @@ public class CamelConfiguration extends RouteBuilder {
         .to(ExchangePattern.InOnly, "amqp:queue:raw")
       .end()
     ;
+  }
+
+  @PreDestroy
+  void stop() throws IOException {
+    if(otelTracer != null)
+      otelTracer.close();
   }
 }

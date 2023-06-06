@@ -123,7 +123,7 @@ $ oc rollout status deployment camel-aggregator \
 +
 -----
 $ export CAMEL_SPLITTER_URL=http://localhost:8080 \
-  && export CAMEL_AGGREGATOR_URL=http://localhost:9090
+  && export CAMEL_AGGREGATOR_URL=http://localhost:6060
 -----
 
 .. If application is deployed in OpenShift:

@@ -21,6 +21,7 @@ import com.redhat.examples.utils.BaseUtils;
 import com.redhat.examples.xml.RawOrder;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Produces;
@@ -34,8 +35,10 @@ import org.apache.camel.Processor;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
+import org.apache.camel.opentelemetry.OpenTelemetryTracer;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
@@ -79,6 +82,8 @@ public class CamelConfiguration extends RouteBuilder {
   @ConfigProperty(name = "quarkus.http.port")
   int itemDescriptionRESTPort;
 
+  OpenTelemetryTracer otelTracer;
+
   @Produces
   @Dependent 
   @Named("ldapserver")
@@ -97,6 +102,9 @@ public class CamelConfiguration extends RouteBuilder {
 
   @PostConstruct
   void start() throws NamingException {
+
+    otelTracer = new OpenTelemetryTracer();
+    otelTracer.init(context);
 
     // https://camel.apache.org/manual/registry.html
     Map<String, DataSource> dSources = context.getRegistry().findByTypeWithName(javax.sql.DataSource.class);
@@ -218,5 +226,11 @@ public class CamelConfiguration extends RouteBuilder {
     from("direct:fetchDescription")
       .to("sql:select description from ITEM_DESCRIPTION where id=:#${body.item}?outputType=SelectOne")
     ;
+  }
+
+  @PreDestroy
+  void stop() throws IOException {
+    if(otelTracer != null)
+      otelTracer.close();
   }
 }
