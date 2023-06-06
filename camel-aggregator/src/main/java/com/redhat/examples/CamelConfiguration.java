@@ -63,7 +63,7 @@ public class CamelConfiguration extends RouteBuilder {
   @Override
   public void configure() throws Exception {
     
-    from("amqp:queue:processed")
+    from("jms:queue:processed")
       .log(LoggingLevel.DEBUG, "[${headers}]")
       .log(LoggingLevel.INFO, "${headers.X-CORRELATION-ID} : Picked up processed order: [${body}]")
       .unmarshal().json(JsonLibrary.Jackson, Map.class)

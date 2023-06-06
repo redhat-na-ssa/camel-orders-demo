@@ -35,15 +35,15 @@
   },
   "spec" : {
     "ports" : [ {
-      "name" : "http",
-      "port" : 8080,
-      "protocol" : "TCP",
-      "targetPort" : 7070
-    }, {
       "name" : "https",
       "port" : 443,
       "protocol" : "TCP",
       "targetPort" : 8443
+    }, {
+      "name" : "http",
+      "port" : 8080,
+      "protocol" : "TCP",
+      "targetPort" : 7070
     } ],
     "selector" : {
       "app.kubernetes.io/name" : "camel-processor"
@@ -103,12 +103,12 @@
           },
           "name" : "camel-processor",
           "ports" : [ {
-            "containerPort" : 8443,
-            "name" : "https",
-            "protocol" : "TCP"
-          }, {
             "containerPort" : 7070,
             "name" : "http",
+            "protocol" : "TCP"
+          }, {
+            "containerPort" : 8443,
+            "name" : "https",
             "protocol" : "TCP"
           } ],
           "readinessProbe" : {

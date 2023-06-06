@@ -61,21 +61,30 @@
         <artifactId>camel-quarkus-rest</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.camel.quarkus</groupId>
-      <artifactId>camel-quarkus-amqp</artifactId>
+        <groupId>org.apache.camel.quarkus</groupId>
+        <artifactId>camel-quarkus-microprofile-health</artifactId>
+    </dependency>
+
+    <!-- messaging 
+        1) https://github.com/ibm-messaging/mq-dev-patterns/issues/81#issuecomment-1157443469           :   Discussion about using IBM JMS classes
+        2) https://issues.redhat.com/browse/CEQ-4878                                                    :   Discusses connection pooling to IBM MQ Series
+    -->
+    <dependency>
+        <groupId>org.apache.camel.quarkus</groupId>
+        <artifactId>camel-quarkus-jms</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkiverse.messaginghub</groupId>
       <artifactId>quarkus-pooled-jms</artifactId>
     </dependency>
+    <dependency>
+        <groupId>io.quarkiverse.artemis</groupId>
+        <artifactId>quarkus-artemis-jms</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-openapi</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-health</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -97,6 +106,11 @@
       <artifactId>quarkus-junit5</artifactId>
       <scope>test</scope>
     </dependency>
+<dependency>
+    <groupId>io.quarkiverse.artemis</groupId>
+    <artifactId>quarkus-test-artemis</artifactId>
+    <scope>test</scope>
+</dependency>
 
   </dependencies>
 

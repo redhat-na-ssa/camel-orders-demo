@@ -13,27 +13,28 @@
 
   <modules>
     <module>base</module>
-    <module>camel-aggregator</module>
-    <module>camel-processor</module>
     <module>camel-splitter</module>
+    <module>camel-processor</module>
+    <module>camel-aggregator</module>
   </modules>
 
   <properties>
     <compiler-plugin.version>3.11.0</compiler-plugin.version>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-    <quarkus.platform.version>3.0.3.Final</quarkus.platform.version>
+    <quarkus.platform.version>3.1.0.Final</quarkus.platform.version>
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.0.0</surefire-plugin.version>
 
     <qpid-jms.version>1.0.0.redhat-00003</qpid-jms.version>
     <amqphub.version>2.5.0.redhat-00001</amqphub.version>
     <messaginghub.version>2.0.0.redhat-00001</messaginghub.version>
+    <quarkiverse-artemis.version>3.0.0.Alpha7</quarkiverse-artemis.version>
   </properties>
 
   <dependencyManagement>
@@ -50,6 +51,14 @@
         <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>quarkus-camel-bom</artifactId>
         <version>${quarkus.platform.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>io.quarkiverse.artemis</groupId>
+        <artifactId>quarkus-artemis-bom</artifactId>
+        <version>${quarkiverse-artemis.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -96,37 +105,41 @@
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>${surefire-plugin.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>integration-test</goal>
-              <goal>verify</goal>
-            </goals>
-            <configuration>
-              <systemPropertyVariables>
-                <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
-                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                <maven.home>${maven.home}</maven.home>
-              </systemPropertyVariables>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>
-  <profiles>
-    <profile>
-      <id>native</id>
-      <activation>
-        <property>
-          <name>native</name>
-        </property>
-      </activation>
-      <properties>
-        <skipITs>false</skipITs>
-        <quarkus.package.type>native</quarkus.package.type>
-      </properties>
-    </profile>
-  </profiles>
+    <profiles>
+        <profile>
+            <id>native</id>
+            <activation>
+                <property>
+                    <name>native</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                                <configuration>
+                                    <systemPropertyVariables>
+                                        <quarkus.package.type>${quarkus.package.type}</quarkus.package.type>
+                                    </systemPropertyVariables>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <properties>
+                <quarkus.package.type>native</quarkus.package.type>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>
