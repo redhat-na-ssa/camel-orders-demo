@@ -23,8 +23,10 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.LoggingLevel;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.opentelemetry.OpenTelemetryTracer;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import com.redhat.examples.utils.BaseUtils;
@@ -60,6 +62,17 @@ public class CamelConfiguration extends RouteBuilder {
   @Override
   public void configure() throws Exception {
 
+    onException((jakarta.jms.JMSSecurityException.class)).process(new Processor() {
+
+      @Override
+      public void process(Exchange exchange) throws Exception {
+        log.error("${headers.X-CORRELATION-ID} : App is throwing jakarta.jms.JMSSecurityException");
+        Exception e = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
+        e.printStackTrace();
+      }
+
+    }).handled(true);
+
     fromF("file:%s?delete=true&readLock=fileLock", props.dir())
 
       .process( e -> {
@@ -92,7 +105,7 @@ public class CamelConfiguration extends RouteBuilder {
       .log(LoggingLevel.INFO, "${headers.X-CORRELATION-ID} : Picked up orders file: [${headers.CamelFileName}]")
       .split(xpath("/orders/order"))
         .log(LoggingLevel.INFO, "Sending order: [${body}]")
-        .to(ExchangePattern.InOnly, "amqp:queue:raw")
+        .to(ExchangePattern.InOnly, "amqp:queue:{{com.redhat.example.rawQueueName}}")
       .end()
     ;
   }

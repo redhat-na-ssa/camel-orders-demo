@@ -169,7 +169,18 @@ public class CamelConfiguration extends RouteBuilder {
 
     }).handled(true);
 
-    from("amqp:queue:raw")
+    onException((Exception.class)).process(new Processor() {
+
+      @Override
+      public void process(Exchange exchange) throws Exception {
+        log.error("${headers.X-CORRELATION-ID} : App is throwing an Exception");
+        Exception e = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
+        e.printStackTrace();
+      }
+
+    }).handled(true);
+
+    from("amqp:queue:{{com.redhat.example.rawQueueName}}")
       .log(LoggingLevel.DEBUG, "[${headers}]")
       .log(LoggingLevel.INFO, "${headers.X-CORRELATION-ID} : Picked up raw order: [${body}]")
       .unmarshal().jaxb("com.redhat.examples.xml")
@@ -187,7 +198,7 @@ public class CamelConfiguration extends RouteBuilder {
       .end()
       .marshal().json(JsonLibrary.Jackson, false)
       .log(LoggingLevel.INFO, "${headers.X-CORRELATION-ID} : Sending processed order: [${body}]")
-      .to(ExchangePattern.InOnly, "amqp:queue:processed")
+      //.to(ExchangePattern.InOnly, "amqp:queue:{{com.redhat.example.processedQueueName}}")
     ;
 
     from("direct:fetchEmployeeEmail")

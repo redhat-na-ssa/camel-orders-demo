@@ -37,17 +37,18 @@ services:
     networks:
       - rht-ml
 
-  artemis:
-    container_name: artemis
-    image: quay.io/artemiscloud/activemq-artemis-broker-init:artemis.2.28.0
+  mqseries:
+    container_name: mqseries
+    image: localhost/ibm-mqadvanced-server-dev:9.2.5.0-amd64 
     ports:
-      - "61616:61616"
-      - "1883:1883"
       - "5672:5672"
-      - "8161:8161"
+      - "1414:1414"
+      - "9443:9443"
     environment:
-      AMQ_USER: admin
-      AMQ_PASSWORD: admin
+      MQ_QMGR_NAME: QM1
+      MQ_APP_PASSWORD: passw0rd
+      MQ_ADMIN_PASSWORD: passw0rd
+      LICENSE: accept
     networks:
       - rht-ml
 
