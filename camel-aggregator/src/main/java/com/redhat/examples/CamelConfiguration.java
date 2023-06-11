@@ -19,12 +19,14 @@ package com.redhat.examples;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
+
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.language.SimpleExpression;
 import org.apache.camel.opentelemetry.OpenTelemetryTracer;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.AggregationStrategies;
@@ -34,6 +36,11 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.JMSException;
+
+import com.ibm.mq.jakarta.jms.MQQueueConnectionFactory;
+import com.ibm.msg.client.jakarta.wmq.WMQConstants;
 
 @ApplicationScoped
 public class CamelConfiguration extends RouteBuilder {
@@ -48,17 +55,26 @@ public class CamelConfiguration extends RouteBuilder {
 
   OpenTelemetryTracer otelTracer;
 
+  @Inject
+  MQSeriesConfigs mqSeriesConfigs;
+
+  MQQueueConnectionFactory mqFactory;
+
   @PostConstruct
-  void start() {
+  void start() throws JMSException {
     log.info("start() setting camel breadcrumb configs");
     context.setUseMDCLogging(true);
     context.setUseBreadcrumb(true);
 
     otelTracer = new OpenTelemetryTracer();
     otelTracer.init(context);
+
+    mqFactory = createWMQConnectionFactory();
+    context.getRegistry().bind("mqConnectionFactory", mqFactory);
+    log.info("connectionFactory registered in camel context: "+context.getRegistry().findByType(ConnectionFactory.class));
+
   }
 
-  
   private AggregationStrategy orderAggregationStrategy() {
     return AggregationStrategies
             .flexible()
@@ -71,7 +87,7 @@ public class CamelConfiguration extends RouteBuilder {
   @Override
   public void configure() throws Exception {
     
-    from("jms:queue:processed")
+    from("jms:queue:{{com.redhat.example.processedQueueName}}?connectionFactory=#mqConnectionFactory")
       .log(LoggingLevel.DEBUG, "[${headers}]")
       .log(LoggingLevel.INFO, "${headers.X-CORRELATION-ID} : Picked up processed order: [${body}]")
       .unmarshal().json(JsonLibrary.Jackson, Map.class)
@@ -88,9 +104,27 @@ public class CamelConfiguration extends RouteBuilder {
     ;
   }
 
+
+  // https://github.com/ibm-messaging/mq-jms-spring/blob/master/mq-jms-spring-boot-starter/src/main/java/com/ibm/mq/spring/boot/MQConnectionFactoryFactory.java#L112-L269
+  private MQQueueConnectionFactory createWMQConnectionFactory() throws JMSException {
+    MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
+    cf.setIntProperty(WMQConstants.WMQ_CONNECTION_MODE, WMQConstants.WMQ_CM_CLIENT);
+    cf.setStringProperty(WMQConstants.WMQ_CONNECTION_NAME_LIST, mqSeriesConfigs.connName());
+    cf.setBooleanProperty(WMQConstants.USER_AUTHENTICATION_MQCSP, true);
+    cf.setQueueManager(mqSeriesConfigs.queueManager());
+    cf.setStringProperty(WMQConstants.WMQ_CHANNEL, mqSeriesConfigs.channel());
+    cf.setStringProperty(WMQConstants.USERID, mqSeriesConfigs.user());
+    cf.setStringProperty(WMQConstants.PASSWORD, mqSeriesConfigs.password());
+
+     return cf;
+ }
+
   @PreDestroy
   void stop() throws IOException {
     if(otelTracer != null)
       otelTracer.close();
+    
+    if(mqFactory != null)
+          mqFactory.clear();
   }
 }

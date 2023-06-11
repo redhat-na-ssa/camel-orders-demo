@@ -198,7 +198,7 @@ public class CamelConfiguration extends RouteBuilder {
       .end()
       .marshal().json(JsonLibrary.Jackson, false)
       .log(LoggingLevel.INFO, "${headers.X-CORRELATION-ID} : Sending processed order: [${body}]")
-      //.to(ExchangePattern.InOnly, "amqp:queue:{{com.redhat.example.processedQueueName}}")
+      .to(ExchangePattern.InOnly, "amqp:queue:{{com.redhat.example.processedQueueName}}")
     ;
 
     from("direct:fetchEmployeeEmail")

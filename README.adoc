@@ -206,6 +206,9 @@ Leverages Camel's link:https://people.apache.org/~dkulp/camel/mdc-logging.html[M
 However, the intent is to link:https://camel.apache.org/blog/2023/01/camel4roadmap/[deprecate MDC Logging in Camel 4]
 
 
+== LDAP
+. link:https://issues.redhat.com/browse/CEQ-6167[Support extension: camel-quarkus-ldap]
+
 == Proprietary IBM MQSeries JMS 
 
 . link:https://github.com/ibm-messaging/mq-dev-patterns/issues/81#issuecomment-1157443469[Discussion about using IBM JMS classes]
@@ -214,5 +217,10 @@ However, the intent is to link:https://camel.apache.org/blog/2023/01/camel4roadm
 +
 Discusses connection pooling to IBM MQ Series
 
-== LDAP
-. link:https://issues.redhat.com/browse/CEQ-6167[Support extension: camel-quarkus-ldap]
+. podman run:
++
+-----
+$ podman run --rm --name=mqseries -p 5672:5672 -p 1414:1414 -p 9443:9443 -e MQ_QMGR_NAME=QM1 -e MQ_APP_PASSWORD=passw0rd -e MQ_ADMIN_PASSWORD=passw0rd -e LICENSE=accept localhost/ibm-mqadvanced-server-dev:9.2.5.0-amd64
+-----
+
+

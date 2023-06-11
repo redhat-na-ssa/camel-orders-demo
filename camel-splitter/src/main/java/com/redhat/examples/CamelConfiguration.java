@@ -26,7 +26,6 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.opentelemetry.OpenTelemetryTracer;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import com.redhat.examples.utils.BaseUtils;
@@ -35,6 +34,12 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.JMSException;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
+import jakarta.jms.TemporaryQueue;
 
 @ApplicationScoped
 public class CamelConfiguration extends RouteBuilder {
@@ -47,16 +52,36 @@ public class CamelConfiguration extends RouteBuilder {
   @Inject
   CamelContext context;
 
+  @Inject
+  ConnectionFactory cFactory;
+
   OpenTelemetryTracer otelTracer;
 
   @PostConstruct
-  void start() {
+  void start() throws JMSException {
     log.info("start() setting camel breadcrumb configs");
     context.setUseMDCLogging(true);
     context.setUseBreadcrumb(true);
 
     otelTracer = new OpenTelemetryTracer();
     otelTracer.init(context);
+
+    testConnection();
+
+  }
+  
+  private void testConnection() throws JMSException {
+
+    /*  TO-DO: wait until the following is seen in the log file of the mqseries container:
+     *      AMQ5041I: The queue manager task 'AUTOCONFIG' has ended. [CommentInsert1(AUTOCONFIG)]
+     */
+    Connection connection = cFactory.createConnection();
+    Session session = connection.createSession();
+    TemporaryQueue queue = session.createTemporaryQueue();
+    log.info("testConnection() just created tempQueue = "+queue.getQueueName());
+    queue.delete();
+    if(connection != null)
+      connection.close();
   }
 
   @Override
