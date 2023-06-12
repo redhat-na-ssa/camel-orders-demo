@@ -1,0 +1,4 @@
+global:
+  scrape_interval: 10s
+  external_labels:
+    system: camel-orders-demo
