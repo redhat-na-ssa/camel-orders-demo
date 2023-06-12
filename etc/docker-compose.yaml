@@ -9,10 +9,6 @@ version: '3.7'
 #
 #   As such, the containers created as per this compose file are configured to all bind to different ports on the host.
 #   You need to ensure your host is not already running processes that bind to ports specified in this docker-compose file.
-#
-#   Also, this docker-compose file assumes that the host (and subsequently all containers bound to it) is resolvable by the name:  rht.
-#   To accomplish this, it is recommended that you add an entry with the name "rht" to your /etc/hosts.  ie:
-#       192.168.122.1     rht
 
 services:
 
