@@ -88,7 +88,7 @@ Accessible without a RHN subscription
 . Deployment Red Hat AMQ Broker operator and create `user1-camel-orders` namespace:
 +
 -----
-$ oc apply -k config_mgmt/gitops/bootstrap/infra/
+$ oc apply -k config_mgmt/gitops/base/infra/
 -----
 
 . Wait until AMQ Broker operator is running in `openshift-operators` namespace:
@@ -104,7 +104,7 @@ $ oc wait \
 +
 -----
 $ oc apply \
-    -k config_mgmt/gitops/bootstrap/apps \
+    -k config_mgmt/gitops/base/apps \
     -n user1-camel-orders
 -----
 
