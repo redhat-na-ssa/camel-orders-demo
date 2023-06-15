@@ -38,11 +38,19 @@ NOTE:  If underlying linux container system in use in your local environment is 
 -----
 $ docker-compose -f etc/docker-compose.yaml up -d
 -----
++
+NOTE:  In this branch, an IBM MQSeries container (enabled with AMQP) is started.
+
+. Buid all sub-projects:
++
+-----
+$ mvn clean install -DskipTests
+-----
 
 
 . The project consists of three quarkus apps that can be run in _dev_ mode.
-
-.. Execute each of the following in its own separate terminal window/tab.
++
+Execute each of the following in its own separate terminal window/tab.
 +
 -----
 $ ( cd camel-splitter; mvn clean quarkus:dev )
