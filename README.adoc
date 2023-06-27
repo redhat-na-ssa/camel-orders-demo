@@ -6,7 +6,7 @@
 
 = camel-orders-demo
 
-image::./images/demo_architecture.png[Demo Architecture]
+image::images/Camel_Orders_Demo-LDAP-Telemetry-MQSeries.png[Demo Architecture]
 
 :numbered:
 
