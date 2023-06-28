@@ -98,7 +98,7 @@ spec:
               drop:
               - MKNOD
           volumeMounts:
-            - mountPath: /container/service/slapd/assets/config/base/ldif/custom/ldap-example-users-2.ldif
+            - mountPath: /container/service/slapd/assets/config/bootstrap/ldif/custom/ldap-example-users-2.ldif
               name: users
               subPath: ldap-example-users-2.ldif
       serviceAccount: openldap
