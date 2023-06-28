@@ -131,7 +131,9 @@ $ oc rollout status deployment camel-aggregator \
 +
 -----
 $ export CAMEL_SPLITTER_URL=http://localhost:8080 \
-  && export CAMEL_AGGREGATOR_URL=http://localhost:6060
+  && export CAMEL_AGGREGATOR_URL=http://localhost:6060 \
+  && export JAEGER_URL=http://localhost:16686 \
+  && export ARTEMIS_ADMIN_URL=http://localhost:8161
 -----
 
 .. If application is deployed in OpenShift:
@@ -197,21 +199,35 @@ $ curl -X GET \
 
 == Tracing Options
 
-. Create your own _user_ header (ie:  X-CORRELATION-ID) in exchange
-+
-Custom exchange header will get propogated from one route to the next
+=== OpenTelemetry
 
-. Camel/Quarkus link:https://camel.apache.org/camel-quarkus/3.0.x/reference/extensions/opentelemetry.html[OpenTelemetry component]
-+
-Appears that Splunk link:https://www.splunk.com/en_us/solutions/opentelemetry.html[suppots OpenTelemetry] as well.
+* Camel/Quarkus link:https://camel.apache.org/camel-quarkus/3.0.x/reference/extensions/opentelemetry.html[OpenTelemetry component]
 
-. breadcrumb and MDC (deprecated)
+* Appears that Splunk link:https://www.splunk.com/en_us/solutions/opentelemetry.html[suppots OpenTelemetry] as well.
+
+. In a browser tab, navigate to the value of:  $JAEGER_URL
 +
-A _breadcrumbId_ is used mainly internally by Apache Camel to track a message through different transports.
+image::images/camel_splitter_jaeger.png[]
+
+. In the left panel, select `camel-splitter` from the _Service_ drop-downlist and then click: `Find Traces`.
+. Select the most recent trace, and view the _digital thread_ of service invocations.
 +
-Leverages Camel's link:https://people.apache.org/~dkulp/camel/mdc-logging.html[Mapped Diagnostic Contexts (MDCs) Logging] component.
-+
-However, the intent is to link:https://camel.apache.org/blog/2023/01/camel4roadmap/[deprecate MDC Logging in Camel 4]
+image::images/camel_splitter_jaeger_trace.png[]
+
+=== Custom Header
+* Create your own _user_ header (ie:  X-CORRELATION-ID) in exchange
+
+* Custom exchange header will get propogated from one route to the next
+
+
+
+=== breadcrumb and MDC (deprecated)
+
+* A _breadcrumbId_ is used mainly internally by Apache Camel to track a message through different transports.
+
+* Leverages Camel's link:https://people.apache.org/~dkulp/camel/mdc-logging.html[Mapped Diagnostic Contexts (MDCs) Logging] component.
+
+* However, the intent is to link:https://camel.apache.org/blog/2023/01/camel4roadmap/[deprecate MDC Logging in Camel 4]
 
 
 == LDAP
