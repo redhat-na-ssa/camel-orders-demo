@@ -87,7 +87,7 @@
             "name" : "JAVA_OPTIONS",
             "value" : "-Dvertx.metrics.options.enabled=true -Dvertx.metrics.options.registryName=prometheus"
           } ],
-          "image" : "quay.io/redhat_naps_da/camel-splitter:1.0.0-SNAPSHOT",
+          "image" : "quay.io/redhat_naps_da/camel-splitter:0.0.2-artemis",
           "imagePullPolicy" : "Always",
           "livenessProbe" : {
             "failureThreshold" : 3,
@@ -164,7 +164,7 @@
         "serviceAccountName" : "camel-splitter",
         "volumes" : [ {
           "configMap" : {
-            "defaultMode" : 420,
+            "defaultMode" : 493,
             "items" : [ {
               "key" : "application.properties",
               "path" : "application.properties"

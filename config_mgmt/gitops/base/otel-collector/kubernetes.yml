@@ -3,59 +3,59 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
-    app.kubernetes.io/name: camel-aggregator
+    app.kubernetes.io/name: otel-collector
     app.kubernetes.io/managed-by: quarkus
-  name: camel-aggregator
+  name: otel-collector
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: camel-aggregator-view
+  name: otel-collector-view
 roleRef:
   kind: ClusterRole
   apiGroup: rbac.authorization.k8s.io
   name: view
 subjects:
   - kind: ServiceAccount
-    name: camel-aggregator
+    name: otel-collector
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubernetes.io/name: camel-aggregator
+    app.kubernetes.io/name: otel-collector
     app.kubernetes.io/managed-by: quarkus
-  name: camel-aggregator
+  name: otel-collector
 spec:
   ports:
-    - name: http
-      port: 8080
+    - name: grpc
+      port: 4317
       protocol: TCP
-      targetPort: 8080
-    - name: https
-      port: 443
+      targetPort: 4317
+    - name: health
+      port: 13133
       protocol: TCP
-      targetPort: 8443
+      targetPort: 13133
   selector:
-    app.kubernetes.io/name: camel-aggregator
+    app.kubernetes.io/name: otel-collector
   type: ClusterIP
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubernetes.io/name: camel-aggregator
+    app.kubernetes.io/name: otel-collector
     app.kubernetes.io/managed-by: quarkus
-  name: camel-aggregator
+  name: otel-collector
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: camel-aggregator
+      app.kubernetes.io/name: otel-collector
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: camel-aggregator
+        app.kubernetes.io/name: otel-collector
         app.kubernetes.io/managed-by: quarkus
     spec:
       containers:
@@ -64,33 +64,31 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            - name: JAVA_OPTIONS
-              value: -Dvertx.metrics.options.enabled=true -Dvertx.metrics.options.registryName=prometheus
-          image: quay.io/redhat_naps_da/camel-aggregator:0.0.2-artemis
+          image: quay.io/redhat_naps_da/opentelemetry-collector:0.80.0
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
             httpGet:
-              path: /q/health/live
-              port: 8080
+              path: /
+              port: 13133
               scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 10
-          name: camel-aggregator
+          name: otel-collector
           ports:
-            - containerPort: 8443
-              name: https
+            - containerPort: 4317
+              name: grpc
               protocol: TCP
-            - containerPort: 8080
-              name: http
+            - containerPort: 13133
+              name: health
               protocol: TCP
           readinessProbe:
             failureThreshold: 3
             httpGet:
-              path: /q/health/ready
-              port: 8080
+              path: /
+              port: 13133
               scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -98,46 +96,39 @@ spec:
             timeoutSeconds: 10
           resources:
             limits:
-              cpu: 750m
-              memory: 768Mi
+              cpu: 500m
+              memory: 512Mi
             requests:
               cpu: 100m
               memory: 128Mi
           startupProbe:
             failureThreshold: 3
             httpGet:
-              path: /q/health/started
-              port: 8080
+              path: /
+              port: 13133
               scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 10
           volumeMounts:
-            - mountPath: /deployments/config
+            - mountPath: /conf
               name: config
-              readOnly: false
-            - mountPath: /data
-              name: appdata
               readOnly: false
       initContainers:
         - args:
             - pod
-            - -lstatefulset.kubernetes.io/pod-name=artemis-ss-0
+            - -lapp.kubernetes.io/name=jaeger
           image: quay.io/jbride/k8s-wait-for:no-root-v1.7
           imagePullPolicy: IfNotPresent
-          name: check-artemis
-      serviceAccountName: camel-aggregator
+          name: check-jaeger
+      serviceAccountName: otel-collector
       volumes:
         - configMap:
             defaultMode: 420
             items:
-              - key: application.properties
-                path: application.properties
-            name: camel-aggregator
+              - key: otel-collector-config.yml
+                path: otel-collector-config.yml
+            name: otel-collector
             optional: false
           name: config
-        - name: appdata
-          persistentVolumeClaim:
-            claimName: camel-aggregator
-            readOnly: false

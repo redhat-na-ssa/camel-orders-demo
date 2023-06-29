@@ -28,14 +28,14 @@ metadata:
   name: camel-processor
 spec:
   ports:
-    - name: http
-      port: 8080
-      protocol: TCP
-      targetPort: 7070
     - name: https
       port: 443
       protocol: TCP
       targetPort: 8443
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
   selector:
     app.kubernetes.io/name: camel-processor
   type: ClusterIP
@@ -66,13 +66,13 @@ spec:
                   fieldPath: metadata.namespace
             - name: JAVA_OPTIONS
               value: -Dvertx.metrics.options.enabled=true -Dvertx.metrics.options.registryName=prometheus
-          image: quay.io/redhat_naps_da/camel-processor:1.0.0-SNAPSHOT
+          image: quay.io/redhat_naps_da/camel-processor:0.0.2-artemis
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
             httpGet:
               path: /q/health/live
-              port: 7070
+              port: 8080
               scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -80,17 +80,17 @@ spec:
             timeoutSeconds: 10
           name: camel-processor
           ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
             - containerPort: 8443
               name: https
-              protocol: TCP
-            - containerPort: 7070
-              name: http
               protocol: TCP
           readinessProbe:
             failureThreshold: 3
             httpGet:
               path: /q/health/ready
-              port: 7070
+              port: 8080
               scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -98,8 +98,8 @@ spec:
             timeoutSeconds: 10
           resources:
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: "750"
+              memory: 768Mi
             requests:
               cpu: 100m
               memory: 128Mi
@@ -107,7 +107,7 @@ spec:
             failureThreshold: 3
             httpGet:
               path: /q/health/started
-              port: 7070
+              port: 8080
               scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 10

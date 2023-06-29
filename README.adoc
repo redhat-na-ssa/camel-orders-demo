@@ -132,7 +132,9 @@ $ export CAMEL_SPLITTER_URL=http://localhost:8080 \
 +
 -----
 $ export CAMEL_SPLITTER_URL=https://$(oc get route camel-splitter -n user1-camel-orders --template='{{ .spec.host }}') \
-  && export CAMEL_AGGREGATOR_URL=https://$(oc get route camel-aggregator -n user1-camel-orders --template='{{ .spec.host }}')
+  && export CAMEL_AGGREGATOR_URL=https://$(oc get route camel-aggregator -n user1-camel-orders --template='{{ .spec.host }}') \
+  && export JAEGER_URL=https://$(oc get route jaeger -n user1-camel-orders --template='{{ .spec.host }}') \
+  && export ARTEMIS_ADMIN_URL=https://$(oc get route artemis-wconsj-0-svc-rte -n user1-camel-orders --template='{{ .spec.host }}')
 -----
 
 . Invoke the `camel-splitter` RESTful endpoint by POSTing a `multipart/form-data` request:
