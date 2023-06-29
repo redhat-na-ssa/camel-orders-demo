@@ -4,6 +4,8 @@ resources:
 - ../mqseries
 - ../app-db
 - ../app-ldap
+- ../otel-collector
+- ../jaeger
 - ../camel-splitter
 - ../camel-processor
 - ../camel-aggregator

@@ -1,0 +1,128 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/managed-by: quarkus
+  name: jaeger
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jaeger-view
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: jaeger
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/managed-by: quarkus
+  name: jaeger
+spec:
+  ports:
+    - name: http
+      port: 16686
+      protocol: TCP
+      targetPort: 16686
+    - name: admin
+      port: 14269
+      protocol: TCP
+      targetPort: 14269
+    - name: thrift
+      port: 14268
+      protocol: TCP
+      targetPort: 14268
+    - name: grpc
+      port: 14250
+      protocol: TCP
+      targetPort: 14250
+  selector:
+    app.kubernetes.io/name: jaeger
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/managed-by: quarkus
+  name: jaeger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: jaeger
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: jaeger
+        app.kubernetes.io/managed-by: quarkus
+    spec:
+      containers:
+        - env:
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: quay.io/redhat_naps_da/jaegertracing-all-in-one:1
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 14269
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 10
+          name: jaeger
+          ports:
+            - containerPort: 16686
+              name: http
+              protocol: TCP
+            - containerPort: 14269
+              name: admin
+              protocol: TCP
+            - containerPort: 14268
+              name: thrift
+              protocol: TCP
+            - containerPort: 14250
+              name: grpc
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 14269
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 10
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          startupProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 14269
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 10
+      serviceAccountName: jaeger

@@ -38,7 +38,7 @@
       "name" : "http",
       "port" : 8080,
       "protocol" : "TCP",
-      "targetPort" : 6060
+      "targetPort" : 8080
     }, {
       "name" : "https",
       "port" : 443,
@@ -87,13 +87,13 @@
             "name" : "JAVA_OPTIONS",
             "value" : "-Dvertx.metrics.options.enabled=true -Dvertx.metrics.options.registryName=prometheus"
           } ],
-          "image" : "quay.io/redhat_naps_da/camel-aggregator:1.0.0-SNAPSHOT",
+          "image" : "quay.io/redhat_naps_da/camel-aggregator:0.0.2-artemis",
           "imagePullPolicy" : "Always",
           "livenessProbe" : {
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/live",
-              "port" : 6060,
+              "port" : 8080,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,
@@ -107,7 +107,7 @@
             "name" : "https",
             "protocol" : "TCP"
           }, {
-            "containerPort" : 6060,
+            "containerPort" : 8080,
             "name" : "http",
             "protocol" : "TCP"
           } ],
@@ -115,7 +115,7 @@
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/ready",
-              "port" : 6060,
+              "port" : 8080,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,
@@ -125,8 +125,8 @@
           },
           "resources" : {
             "limits" : {
-              "cpu" : "500m",
-              "memory" : "512Mi"
+              "cpu" : "750m",
+              "memory" : "768Mi"
             },
             "requests" : {
               "cpu" : "100m",
@@ -137,7 +137,7 @@
             "failureThreshold" : 3,
             "httpGet" : {
               "path" : "/q/health/started",
-              "port" : 6060,
+              "port" : 8080,
               "scheme" : "HTTP"
             },
             "initialDelaySeconds" : 5,

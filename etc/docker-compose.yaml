@@ -64,32 +64,27 @@ services:
     command: [--copy-service]
     volumes:
     - ./openldap/ldap-example-users-2.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/ldap-example-users-2.ldif:bind
-    #- ./openldap/ldap-generated.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/ldap-generated.ldif:bind
     networks:
       - rht-ml
 
-#  prometheus:
-#    image: quay.io/prometheus/prometheus:v2.43.0
-#    container_name: prometheus
-#    ports:
-#      - "9090:9090"
-#    volumes:
-#      - ./monitoring/prometheus_scrape_configs.yml:/etc/prometheus/prometheus.yml
-#    networks:
-#      - rht-ml
-
   jaeger:
-    image: jaegertracing/all-in-one:1
+    # Pushed from docker.io/jaegertracing/all-in-one to quay.io (to avoid rate-limiting at docker hub)
+    image: quay.io/redhat_naps_da/jaegertracing-all-in-one:1
+
     container_name: jaeger
     ports:
       - "16686:16686" # Jaeger UI
-      - "14268"       # Accept thrift spans
-      - "14250"       # Accept gRPC spans
+      - "14269:14269" # Collector admin port: health check at / and metrics at /metrics
+      - "14268:14268" # Accept thrift spans
+      - "14250:14250" # Accept gRPC spans
     networks:
       - rht-ml
 
   otel-collector:
-    image: otel/opentelemetry-collector:0.75.0
+
+    # Pushed from docker.io to quay.io (to avoid rate-limiting at docker hub)
+    image: quay.io/redhat_naps_da/opentelemetry-collector:0.80.0
+
     container_name: otel-collector
     command:
       - "--config=/conf/otel-collector-config.yml"
