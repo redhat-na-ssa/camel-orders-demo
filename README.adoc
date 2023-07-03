@@ -240,3 +240,12 @@ Discusses connection pooling to IBM MQ Series
 
 == LDAP
 . link:https://issues.redhat.com/browse/CEQ-6167[Support extension: camel-quarkus-ldap]
+
+== Build
+
+-----
+$ mvn clean package \
+    -DskipTests \
+    -Dquarkus.container-image.build=true \
+    -Dquarkus.container-image.push=true
+-----
