@@ -66,6 +66,8 @@ spec:
                   fieldPath: metadata.namespace
           image: quay.io/redhat_naps_da/opentelemetry-collector:0.80.0
           imagePullPolicy: Always
+          args: 
+            - --config=/conf/otel-collector-config.yml
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -112,9 +114,9 @@ spec:
             successThreshold: 1
             timeoutSeconds: 10
           volumeMounts:
-            - mountPath: /conf
+            - mountPath: /conf/otel-collector-config.yml
               name: config
-              readOnly: false
+              subPath: otel-collector-config.yml
       initContainers:
         - args:
             - pod
@@ -125,10 +127,5 @@ spec:
       serviceAccountName: otel-collector
       volumes:
         - configMap:
-            defaultMode: 420
-            items:
-              - key: otel-collector-config.yml
-                path: otel-collector-config.yml
             name: otel-collector
-            optional: false
           name: config
