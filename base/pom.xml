@@ -8,7 +8,7 @@
     <parent>
       <groupId>com.redhat.examples</groupId>
       <artifactId>camel-orders-demo</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>0.0.1</version>
     </parent>
 
     <artifactId>base</artifactId>
