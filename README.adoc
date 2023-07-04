@@ -96,29 +96,14 @@ Accessible without a RHN subscription
 . Deployment Red Hat AMQ Broker operator and create `user1-camel-orders` namespace:
 +
 -----
-$ oc apply -k config_mgmt/gitops/base/infra/
+$ oc apply -k config_mgmt/gitops/overlays/mqseries/infra/
 -----
 
-. Wait until AMQ Broker operator is running in `openshift-operators` namespace:
-+
------
-$ oc wait \
-    --for=condition=ready pod \
-    -l name=amq-broker-operator \
-    -n openshift-operators
------
-+
-Within about a minute, you should see a statement similar to the following:
-+
------
-pod/amq-broker-operator-76b7f5985b-w9pwj condition met
------
-
-. Deploy all app into `user1-camel-orders` namespace:
+. Deploy all apps into `user1-camel-orders` namespace:
 +
 -----
 $ oc apply \
-    -k config_mgmt/gitops/base/apps \
+    -k config_mgmt/gitops/overlays/mqseries/apps \
     -n user1-camel-orders
 -----
 
@@ -147,8 +132,7 @@ $ export CAMEL_SPLITTER_URL=http://localhost:8080 \
 -----
 $ export CAMEL_SPLITTER_URL=https://$(oc get route camel-splitter -n user1-camel-orders --template='{{ .spec.host }}') \
   && export CAMEL_AGGREGATOR_URL=https://$(oc get route camel-aggregator -n user1-camel-orders --template='{{ .spec.host }}') \
-  && export JAEGER_URL=https://$(oc get route jaeger -n user1-camel-orders --template='{{ .spec.host }}') \
-  && export ARTEMIS_ADMIN_URL=https://$(oc get route artemis-wconsj-0-svc-rte -n user1-camel-orders --template='{{ .spec.host }}')
+  && export JAEGER_URL=https://$(oc get route jaeger -n user1-camel-orders --template='{{ .spec.host }}') 
 -----
 
 . Invoke the `camel-splitter` RESTful endpoint by POSTing a `multipart/form-data` request:
@@ -266,4 +250,21 @@ $ mvn clean package \
     -DskipTests \
     -Dquarkus.container-image.build=true \
     -Dquarkus.container-image.push=true
+-----
+
+== Issues
+
+. cat /var/mqm/qmgrs/QM1/errors/amqp_0.log
++
+-----
+AMQXR0033E: A connection from 10.129.0.23 for client identifier 'ID:a073664b-a901-46e5-a989-8d476fa4a023:1' was rejected for channel SYSTEM.DEF.AMQP because of CONNAUTH or CHLAUTH rule configuration. MQCC 2, MQRC 2330 MQRC_CODED_CHAR_SET_ID_ERROR
+-----
+
+. Workaround:
++
+-----
+$ oc rsh mqseries-666fb45d54-q5d4q
+$ runmqsc
+
+ALTER QMGR CHLAUTH(DISABLED)
 -----

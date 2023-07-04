@@ -1,0 +1,17 @@
+- op: replace
+  path: /spec/template/spec/containers/0/image
+  value: quay.io/redhat_naps_da/camel-splitter:0.0.2-mqseries
+
+- op: remove
+  path: /spec/template/spec/initContainers
+
+- op: add
+  path: /spec/template/spec/initContainers
+  value: 
+    - args:
+        - pod
+        - -lpod
+        - -lapp.kubernetes.io/name=mqseries
+      image: quay.io/jbride/k8s-wait-for:no-root-v1.7
+      imagePullPolicy: IfNotPresent
+      name: check-mqseries

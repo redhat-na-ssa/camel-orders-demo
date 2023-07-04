@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+configMapGenerator:
+  - name: camel-splitter
+    behavior: replace
+    files:
+      - application.properties
+
+bases:
+- ../../../base/camel-splitter
+
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: camel-splitter
+  path: deployment_patch.yml
+

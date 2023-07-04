@@ -35,15 +35,15 @@
   },
   "spec" : {
     "ports" : [ {
-      "name" : "https",
-      "port" : 443,
-      "protocol" : "TCP",
-      "targetPort" : 8443
-    }, {
       "name" : "http",
       "port" : 8080,
       "protocol" : "TCP",
       "targetPort" : 8080
+    }, {
+      "name" : "https",
+      "port" : 443,
+      "protocol" : "TCP",
+      "targetPort" : 8443
     } ],
     "selector" : {
       "app.kubernetes.io/name" : "camel-aggregator"
@@ -103,12 +103,12 @@
           },
           "name" : "camel-aggregator",
           "ports" : [ {
-            "containerPort" : 8080,
-            "name" : "http",
-            "protocol" : "TCP"
-          }, {
             "containerPort" : 8443,
             "name" : "https",
+            "protocol" : "TCP"
+          }, {
+            "containerPort" : 8080,
+            "name" : "http",
             "protocol" : "TCP"
           } ],
           "readinessProbe" : {
@@ -156,7 +156,7 @@
           } ]
         } ],
         "initContainers" : [ {
-          "args" : [ "pod", "-lstatefulset.kubernetes.io/pod-name=mqseries" ],
+          "args" : [ "pod", "-lpod", "-lapp.kubernetes.io/name=mqseries" ],
           "image" : "quay.io/jbride/k8s-wait-for:no-root-v1.7",
           "imagePullPolicy" : "IfNotPresent",
           "name" : "check-mqseries"
