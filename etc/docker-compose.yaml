@@ -83,6 +83,7 @@ services:
   otel-collector:
 
     # Pushed from docker.io to quay.io (to avoid rate-limiting at docker hub)
+    # Alternative:   https://catalog.redhat.com/software/containers/rhosdt/opentelemetry-collector-rhel8/613b50f3a052bb39f2c5f31f
     image: quay.io/redhat_naps_da/opentelemetry-collector:0.80.0
 
     container_name: otel-collector

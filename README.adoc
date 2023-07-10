@@ -225,7 +225,9 @@ image::images/camel_splitter_jaeger_trace.png[]
 == LDAP
 . link:https://issues.redhat.com/browse/CEQ-6167[Support extension: camel-quarkus-ldap]
 
-== Proprietary IBM MQSeries JMS 
+== IBM MQSeries
+
+=== Proprietary JMS 
 
 . link:https://github.com/ibm-messaging/mq-dev-patterns/issues/81#issuecomment-1157443469[Discussion about using IBM JMS classes]
 
@@ -239,20 +241,40 @@ Discusses connection pooling to IBM MQ Series
 $ podman run --rm --name=mqseries -p 5672:5672 -p 1414:1414 -p 9443:9443 -e MQ_QMGR_NAME=QM1 -e MQ_APP_PASSWORD=passw0rd -e MQ_ADMIN_PASSWORD=passw0rd -e LICENSE=accept localhost/ibm-mqadvanced-server-dev:9.2.5.0-amd64
 -----
 
-
-== LDAP
-. link:https://issues.redhat.com/browse/CEQ-6167[Support extension: camel-quarkus-ldap]
-
-== Build
+=== Security
 
 -----
-$ mvn clean package \
-    -DskipTests \
-    -Dquarkus.container-image.build=true \
-    -Dquarkus.container-image.push=true
 -----
 
-== Issues
+. Display QMGR connection auth:
++
+-----
+$ runmqsc
+$ DISPLAY QMGR CONNAUTH
+-----
++
+The CONNAUTH value is a name of an AUTHINFO MQ object. MQ version 8 supports two methods of authentication: using the operating system (AUTHTYPE(IDPWOS)) or using LDAP (not available on z/OS) (AUTHTYPE(IDPWLDAP)).
+
+. Display authentication information details:
++
+-----
+$ display authinfo(SYSTEM.DEFAULT.AUTHINFO.IDPWOS)
+-----
++
+-----
+   AUTHINFO(SYSTEM.DEFAULT.AUTHINFO.IDPWOS)
+   AUTHTYPE(IDPWOS)                        ADOPTCTX(YES)
+   DESCR( )                                CHCKCLNT(REQDADM)
+   CHCKLOCL(OPTIONAL)                      FAILDLAY(1)
+   AUTHENMD(OS)                            ALTDATE(2023-07-05)
+   ALTTIME(14.02.37)
+-----
+
+.. REQDADM
++
+Privileged users are REQUIRED to provide a password but non-privileged users don’t have to.
+
+=== Issues
 
 . cat /var/mqm/qmgrs/QM1/errors/amqp_0.log
 +
@@ -268,3 +290,17 @@ $ runmqsc
 
 ALTER QMGR CHLAUTH(DISABLED)
 -----
+
+== LDAP
+. link:https://issues.redhat.com/browse/CEQ-6167[Support extension: camel-quarkus-ldap]
+
+== Build
+
+-----
+$ mvn clean package \
+    -DskipTests \
+    -Dquarkus.container-image.build=true \
+    -Dquarkus.container-image.push=true
+-----
+
+
