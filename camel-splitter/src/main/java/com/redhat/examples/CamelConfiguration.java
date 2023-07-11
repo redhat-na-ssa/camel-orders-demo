@@ -30,9 +30,12 @@ import org.jboss.logging.Logger;
 
 import com.redhat.examples.utils.BaseUtils;
 
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.sdk.resources.Resource;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.jms.Connection;
 import jakarta.jms.ConnectionFactory;

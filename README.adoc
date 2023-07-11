@@ -195,8 +195,10 @@ $ curl -X GET \
 
 * Camel/Quarkus link:https://camel.apache.org/camel-quarkus/3.0.x/reference/extensions/opentelemetry.html[OpenTelemetry component]
 
-* Appears that Splunk link:https://www.splunk.com/en_us/solutions/opentelemetry.html[suppots OpenTelemetry] as well.
+* Appears that Splunk link:https://www.splunk.com/en_us/solutions/opentelemetry.html[supports OpenTelemetry] as well.
 
+
+==== Basic Tracing View
 . In a browser tab, navigate to the value of:  $JAEGER_URL
 +
 image::images/camel_splitter_jaeger.png[]
@@ -206,11 +208,34 @@ image::images/camel_splitter_jaeger.png[]
 +
 image::images/camel_splitter_jaeger_trace.png[]
 
+
+
+==== Traces by _itemId_ custom attribute
+It is possible to add a custom attribute to an OpenTelemetry span so as to facilitate searching of traces by that custom attribute.
+
+In this demo, a custom attribute of _itemId_ has been added to one of the spans of the _camel-processor_ service.  Search for traces associated with an _itemId_ as follows:
+
+. In a browser tab, navigate to the value of:  $JAEGER_URL
++
+image::images/camel_splitter_jaeger.png[]
+
+. In the left panel, select `camel-processor` from the _Service_ drop-downlist.
+. Enter the following value in the _Tags_ field:  itemId=2
++
+image::images/camel_processor_jaeger_trace_custom_attribute.png[]
+. Click: `Find Traces`
+. Select the most recent trace, and view the _digital thread_ of service invocations.
++
+image::images/camel_splitter_jaeger_trace.png[]
+. Within the trace, filter for the span with the custom attribute: itemId=2
++
+image::images/camel_processor_jaeger_trace_filter_custom_attribute.png[]
+
+
 === Custom Header
 * Create your own _user_ header (ie:  X-CORRELATION-ID) in exchange
 
 * Custom exchange header will get propogated from one route to the next
-
 
 
 === breadcrumb and MDC (deprecated)
