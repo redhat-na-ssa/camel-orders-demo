@@ -20,6 +20,7 @@ import com.redhat.examples.json.ProcessedOrder;
 import com.redhat.examples.utils.BaseUtils;
 import com.redhat.examples.xml.RawOrder;
 
+import io.opentelemetry.api.trace.Span;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -63,6 +64,8 @@ public class CamelConfiguration extends RouteBuilder {
 
   protected static final String MAIL_ATTRIBUTE = "mail";
   protected static final String EMPLOYEE_NUMBER = "employeeNumber";
+  public static final String ITEM_ID="itemId";
+  public static final String ITEM_ID_SPAN="itemIdSpan";
 
   @Inject
   OrderMapping orderMapping;
@@ -173,21 +176,37 @@ public class CamelConfiguration extends RouteBuilder {
       .log(LoggingLevel.DEBUG, "[${headers}]")
       .log(LoggingLevel.INFO, "${headers.X-CORRELATION-ID} : Picked up raw order: [${body}]")
       .unmarshal().jaxb("com.redhat.examples.xml")
+
+      // Transformation of xml-> java ProcessedOrder bean using MapStruct
       .process(e -> {
         RawOrder raw = (RawOrder)e.getIn().getBody();
         e.getIn().setBody(orderMapping.rawToProcessed(raw));
       })
+
+      // OpenTelemtry: add custom attribute to current span (so as to be able to search by attribute in Jaeger)
+      .process( e -> {
+        ProcessedOrder processedO = (ProcessedOrder)(e.getIn().getBody());
+        Span.current().setAttribute(ITEM_ID,processedO.getItem());
+      })
+
+      // Message Enrichment pattern
       .enrich()
         .constant("direct:fetchEmployeeEmail")
         .aggregationStrategy(employeeNumEnrichmentStrategy())
       .end()
+
+      // Message Enrichment pattern
       .enrich()
         .constant("direct:fetchDescriptionREST")
         .aggregationStrategy(descriptionEnrichmentStrategy())
       .end()
+
+      // Marshall to JSON payload
       .marshal().json(JsonLibrary.Jackson, false)
       .log(LoggingLevel.INFO, "${headers.X-CORRELATION-ID} : Sending processed order: [${body}]")
-      .to(ExchangePattern.InOnly, "amqp:queue:processed")
+
+      // Send to AMQP queue
+      .to(ExchangePattern.InOnly, "amqp:queue:{{com.redhat.example.processedQueueName}}")
     ;
 
     from("direct:fetchEmployeeEmail")
