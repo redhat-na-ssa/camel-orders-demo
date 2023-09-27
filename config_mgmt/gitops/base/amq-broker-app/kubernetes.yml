@@ -14,6 +14,9 @@ spec:
     - name: amqp
       port: 5672
       protocols: amqp
+  addressSettings:
+    addressSetting:
+    - maxDeliveryAttempts: 1
   adminPassword: admin
   adminUser: admin
   deploymentPlan:

@@ -12,7 +12,7 @@
     </parent>
 
     <artifactId>camel-processor</artifactId>
-    <version>0.0.2-artemis</version>
+    <version>0.0.3-artemis</version>
 
   <dependencies>
 
@@ -55,6 +55,10 @@
     <dependency>
         <groupId>org.apache.camel.quarkus</groupId>
         <artifactId>camel-quarkus-opentelemetry</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>io.opentelemetry.instrumentation</groupId>
+        <artifactId>opentelemetry-jdbc</artifactId>
     </dependency>
 
     <!-- REST -->
